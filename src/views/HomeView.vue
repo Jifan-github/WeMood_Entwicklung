@@ -16,10 +16,10 @@
         <button
             class="px-3 sm:px-6 py-2 bg-red-500 text-white text-sm sm:text-base rounded-full hover:bg-red-600 transition-colors"
         >
-          NotWfall-Hilfe
+          Notfall-Hilfe
         </button>
 
-        <!-- Einstellungen Icon (noch nicht funktional) -->
+        <!-- Einstellungen Icon (nicht funktional) -->
         <button
             class="p-2 sm:p-3 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors"
         >
@@ -96,6 +96,8 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 import { Search as SearchIcon, Settings as SettingsIcon, ChevronDown as ChevronDownIcon } from 'lucide-vue-next'
 
 const searchQuery = ref('')
@@ -119,7 +121,12 @@ function toggleEmotion(emotion) {
 }
 
 function handleSearch() {
-  // Noch nicht funktional - wird in Commit 3 implementiert
-  console.log('Suche:', searchQuery.value, 'Emotionen:', selectedEmotions.value)
+  router.push({
+    name: 'search',
+    query: {
+      q: searchQuery.value || 'mental health',
+      emotions: selectedEmotions.value.join(',')
+    }
+  })
 }
 </script>
