@@ -39,8 +39,13 @@
       <p class="text-base sm:text-lg text-gray-500">Entdecke Inhalte für dein Wohlbefinden</p>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-12">
+      <p class="text-gray-500">Artikel werden geladen...</p>
+    </div>
+
     <!-- Grid Layout -->
-    <div class="max-w-6xl mx-auto">
+    <div v-else class="max-w-6xl mx-auto">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-12">
         <router-link
             v-for="(item, index) in filteredItems"
@@ -89,86 +94,28 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   ChevronUp as ChevronUpIcon,
   Search as SearchIcon,
   Sparkles as SparklesIcon,
   FileText as FileTextIcon
 } from 'lucide-vue-next'
+import { getAllArticles } from '../services/api.js'
 
 const searchQuery = ref('')
+const articles = ref([])
+const loading = ref(true)
 
-const mediaItems = [
-  {
-    id: 1,
-    title: 'Achtsamkeit für Anfänger',
-    description: 'Lerne die Grundlagen der Achtsamkeit',
-    readTime: '5 Min. Lesezeit',
-    emoji: '🧘‍♀️'
-  },
-  {
-    id: 2,
-    title: 'Geführte Meditation',
-    description: 'Entspanne deinen Geist',
-    readTime: '6 Min. Lesezeit',
-    emoji: '🎧'
-  },
-  {
-    id: 3,
-    title: 'Umgang mit Stress',
-    description: 'Praktische Tipps für den Alltag',
-    readTime: '5 Min. Lesezeit',
-    emoji: '📖'
-  },
-  {
-    id: 4,
-    title: 'Emotionen verstehen',
-    description: 'Was sagen uns unsere Gefühle?',
-    readTime: '7 Min. Lesezeit',
-    emoji: '💭'
-  },
-  {
-    id: 5,
-    title: 'Schlaf-Meditation',
-    description: 'Für einen erholsamen Schlaf',
-    readTime: '8 Min. Lesezeit',
-    emoji: '🌙'
-  },
-  {
-    id: 6,
-    title: 'Selbstfürsorge Rituale',
-    description: 'Tägliche Routinen für dein Wohlbefinden',
-    readTime: '7 Min. Lesezeit',
-    emoji: '✨'
-  },
-  {
-    id: 7,
-    title: 'Angst bewältigen',
-    description: 'Strategien gegen Angststörungen',
-    readTime: '10 Min. Lesezeit',
-    emoji: '🌈'
-  },
-  {
-    id: 8,
-    title: 'Positive Affirmationen',
-    description: 'Stärke dein Selbstvertrauen',
-    readTime: '4 Min. Lesezeit',
-    emoji: '💪'
-  },
-  {
-    id: 9,
-    title: 'Resilienz aufbauen',
-    description: 'Wie du Krisen besser meisterst',
-    readTime: '8 Min. Lesezeit',
-    emoji: '🌺'
-  }
-]
+onMounted(async () => {
+  articles.value = await getAllArticles()
+  loading.value = false
+})
 
 const filteredItems = computed(() => {
-  if (!searchQuery.value.trim()) return mediaItems
+  if (!searchQuery.value.trim()) return articles.value
   const query = searchQuery.value.toLowerCase()
-  return mediaItems.filter(item =>
+  return articles.value.filter(item =>
       item.title.toLowerCase().includes(query) ||
       item.description.toLowerCase().includes(query)
   )

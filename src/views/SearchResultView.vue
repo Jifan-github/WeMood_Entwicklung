@@ -11,8 +11,13 @@
         <span class="text-sm sm:text-base text-gray-700">Zurück</span>
       </router-link>
 
+      <!-- Loading State -->
+      <div v-if="loading" class="bg-white border border-gray-200 rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-12 text-center">
+        <p class="text-gray-500">Analyse wird durchgeführt...</p>
+      </div>
+
       <!-- Analyse Panel -->
-      <div class="bg-white border border-gray-200 rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-12">
+      <div v-else class="bg-white border border-gray-200 rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-12">
 
         <!-- Analyse Text -->
         <div class="mb-8 sm:mb-10 text-center">
@@ -20,9 +25,9 @@
             Deine Analyse
           </h2>
           <p class="text-base sm:text-xl text-gray-600 leading-relaxed">
-            Laut deinem Prompt ist mir aufgefallen, dass dich Themen wie
-            <span class="font-semibold text-gray-800">Trauer</span> und
-            <span class="font-semibold text-gray-800">Stress</span> bedrücken.
+            Basierend auf deiner Suche nach
+            <span class="font-semibold text-gray-800">"{{ searchQueryText }}"</span>
+            haben wir folgende Themen erkannt:
           </p>
         </div>
 
@@ -32,24 +37,29 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <router-link
-                v-for="topic in detectedTopics"
-                :key="topic.id"
-                :to="'/article/' + topic.articleId"
+                v-for="result in searchResults"
+                :key="result.id"
+                :to="'/article/' + result.id"
                 class="group bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-gray-100 transition-all text-left"
             >
               <!-- Thema Header -->
               <div class="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                 <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-200 flex items-center justify-center text-2xl sm:text-3xl">
-                  {{ topic.emoji }}
+                  {{ result.emoji }}
                 </div>
-                <h4 class="text-xl sm:text-2xl font-quicksand font-semibold text-gray-800">
-                  {{ topic.name }}
-                </h4>
+                <div>
+                  <h4 class="text-xl sm:text-2xl font-quicksand font-semibold text-gray-800">
+                    {{ result.title }}
+                  </h4>
+                  <span class="text-xs sm:text-sm text-gray-400">
+                    {{ result.confidence }}% Übereinstimmung
+                  </span>
+                </div>
               </div>
 
               <!-- Thema Beschreibung -->
               <p class="text-sm sm:text-base text-gray-600 leading-relaxed">
-                {{ topic.description }}
+                {{ result.description }}
               </p>
 
               <!-- Pfeil -->
@@ -75,22 +85,20 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ArrowLeft as ArrowLeftIcon } from 'lucide-vue-next'
+import { searchArticles } from '../services/api.js'
 
-const detectedTopics = [
-  {
-    id: 1,
-    articleId: 2,
-    name: 'Trauer',
-    emoji: '😢',
-    description: 'Verstehe und verarbeite deine Trauer mit bewährten Methoden'
-  },
-  {
-    id: 2,
-    articleId: 3,
-    name: 'Stress',
-    emoji: '😰',
-    description: 'Lerne effektive Strategien zur Stressbewältigung'
-  }
-]
+const route = useRoute()
+const searchResults = ref([])
+const loading = ref(true)
+const searchQueryText = ref('')
+
+onMounted(async () => {
+  searchQueryText.value = route.query.q || ''
+  const emotions = route.query.emotions ? route.query.emotions.split(',') : []
+  searchResults.value = await searchArticles(searchQueryText.value, emotions)
+  loading.value = false
+})
 </script>
