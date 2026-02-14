@@ -1,4 +1,21 @@
+/*
+  Globale Styles für WeMood.
+
+  Quellen:
+  - Tailwind CSS v4 @import: https://tailwindcss.com/docs/installation/vite
+  - Google Fonts Quicksand: https://fonts.google.com/specimen/Quicksand
+*/
+
 @import "tailwindcss";
+
+/*
+  Quicksand Font-Familie als Tailwind Utility verfügbar machen.
+  Die Font-Einbindung erfolgt über <link> in index.html.
+  Quelle: https://tailwindcss.com/docs/font-family#using-custom-values
+*/
+@theme {
+    --font-quicksand: 'Quicksand', sans-serif;
+}
 
 /* Animation delays für Blob-Elemente */
 .animation-delay-1000 {
@@ -13,3 +30,5 @@
 .animation-delay-4000 {
     animation-delay: 4s;
 }
+
+
