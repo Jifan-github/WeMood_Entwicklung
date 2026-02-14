@@ -1,82 +1,89 @@
 <template>
   <!--
     AnimatedBackground.vue
-    Animierter Hintergrund mit Farbverlauf und schwebenden Formen.
-    Der Gradient cycled durch die definierten Farben,
-    die Formen bewegen sich sanft im Hintergrund.
+    Animierter Hintergrund passend zum Figma-Mockup:
+    - Kräftiger Lila → Pink → Orange Farbverlauf (cycled)
+    - Zentrale, deutlich sichtbare Blobs mit Morph-Animation
 
     Quellen:
-    - Tailwind CSS Animations: https://tailwindcss.com/docs/animation
     - CSS @keyframes: https://developer.mozilla.org/en-US/docs/Web/CSS/@keyframes
-    - Vue 3 Composition API: https://vuejs.org/guide/extras/composition-api-faq.html
+    - CSS radial-gradient(): https://developer.mozilla.org/en-US/docs/Web/CSS/gradient/radial-gradient
+    - CSS linear-gradient(): https://developer.mozilla.org/en-US/docs/Web/CSS/gradient/linear-gradient
+    - CSS filter blur(): https://developer.mozilla.org/en-US/docs/Web/CSS/filter-function/blur
+    - CSS border-radius organische Formen: https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius
+    - CSS transform: https://developer.mozilla.org/en-US/docs/Web/CSS/transform
+    - Animated Gradients Technik: https://css-tricks.com/animating-gradients/
+    - Vue 3 v-for + :style: https://vuejs.org/guide/essentials/list.html
+    - Tailwind CSS Farbreferenz: https://tailwindcss.com/docs/colors
   -->
   <div class="fixed inset-0 -z-10 overflow-hidden">
-    <!-- Animierter Farbverlauf als Basis -->
-    <div class="absolute inset-0 gradient-cycle opacity-60" />
 
-    <!-- Schwebende Formen -->
+    <!-- Animierter Farbverlauf -->
+    <div class="absolute inset-0 gradient-cycle" />
+
+    <!-- Sichtbare Blobs (zentral, deutlich) -->
     <div
-        v-for="shape in shapes"
-        :key="shape.id"
-        class="absolute rounded-full opacity-20 blur-3xl"
-        :class="shape.color"
-        :style="shape.style"
+        v-for="blob in blobs"
+        :key="blob.id"
+        class="absolute"
+        :style="blob.style"
     />
   </div>
 </template>
 
 <script setup>
 /**
- * Generiert die schwebenden Hintergrund-Formen mit
- * zufälligen Positionen und Animationsverzögerungen.
+ * Blob-Konfiguration passend zum Figma-Mockup.
+ * Zentral platziert, moderate Blur (60px), höhere Opacity (0.45).
  *
- * Quelle: CSS blur + opacity Technik für Glasmorphismus-Effekte
- * https://css-tricks.com/glassmorphism-css-snippet/
+ * Farben: Violet (#7C3AED, #A78BFA), Pink (#EC4899, #F472B6),
+ *         Orange (#F59E0B, #FBBF24), Indigo (#818CF8)
+ *
+ * Quelle Farbwerte: https://tailwindcss.com/docs/colors
  */
-const shapes = [
+const blobs = [
   {
     id: 1,
-    color: 'bg-purple-400',
     style: {
-      width: '300px', height: '300px',
-      top: '10%', left: '5%',
-      animation: 'float 20s ease-in-out infinite',
+      width: '500px', height: '500px',
+      background: 'linear-gradient(135deg, #A78BFA, #7C3AED, #6D28D9)',
+      top: '15%', left: '20%',
+      filter: 'blur(60px)', opacity: 0.45,
+      borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
+      animation: 'morphBlob1 10s ease-in-out infinite, moveBlob1 18s ease-in-out infinite',
     },
   },
   {
     id: 2,
-    color: 'bg-orange-300',
     style: {
-      width: '250px', height: '250px',
-      top: '60%', right: '10%',
-      animation: 'float 25s ease-in-out infinite 2s',
+      width: '450px', height: '450px',
+      background: 'linear-gradient(135deg, #F472B6, #EC4899, #DB2777)',
+      top: '30%', right: '15%',
+      filter: 'blur(60px)', opacity: 0.4,
+      borderRadius: '40% 60% 60% 40% / 60% 30% 70% 40%',
+      animation: 'morphBlob2 12s ease-in-out infinite, moveBlob2 20s ease-in-out infinite',
     },
   },
   {
     id: 3,
-    color: 'bg-pink-300',
     style: {
-      width: '200px', height: '200px',
+      width: '420px', height: '420px',
+      background: 'linear-gradient(135deg, #FBBF24, #F59E0B, #D97706)',
       bottom: '20%', left: '30%',
-      animation: 'float 18s ease-in-out infinite 4s',
+      filter: 'blur(60px)', opacity: 0.35,
+      borderRadius: '70% 30% 50% 50% / 60% 40% 60% 40%',
+      animation: 'morphBlob3 14s ease-in-out infinite, moveBlob3 22s ease-in-out infinite',
     },
   },
   {
     id: 4,
-    color: 'bg-blue-300',
     style: {
-      width: '280px', height: '280px',
-      top: '30%', right: '25%',
-      animation: 'float 22s ease-in-out infinite 1s',
-    },
-  },
-  {
-    id: 5,
-    color: 'bg-teal-300',
-    style: {
-      width: '180px', height: '180px',
-      top: '5%', right: '40%',
-      animation: 'float 16s ease-in-out infinite 3s',
+      width: '380px', height: '380px',
+      background: 'linear-gradient(135deg, #C4B5FD, #A78BFA, #8B5CF6)',
+      top: '10%', right: '30%',
+      filter: 'blur(60px)', opacity: 0.4,
+      borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
+      animation: 'morphBlob1 16s ease-in-out infinite, moveBlob4 15s ease-in-out infinite, pulse 7s ease-in-out infinite',
     },
   },
 ]
@@ -84,46 +91,82 @@ const shapes = [
 
 <style scoped>
 /*
-  Gradient-Cycle Animation:
-  Der Hintergrund wechselt sanft zwischen verschiedenen Farbverläufen.
-
-  Quelle: CSS animated gradients via background-size trick
-  https://developer.mozilla.org/en-US/docs/Web/CSS/gradient/linear-gradient
-  https://css-tricks.com/animating-gradients/
+  ── GRADIENT ──
+  Kräftiger Lila → Pink → Orange Verlauf wie im Mockup.
+  Quelle: https://css-tricks.com/animating-gradients/
 */
 .gradient-cycle {
   background: linear-gradient(
       135deg,
-      #fde68a,   /* amber-200 */
-      #c4b5fd,   /* violet-300 */
-      #fbcfe8,   /* pink-200 */
-      #a5f3fc,   /* cyan-200 */
-      #fde68a    /* zurück zu amber-200 für nahtlosen Loop */
+      #7C3AED 0%,     /* violet-600 */
+      #A78BFA 15%,     /* violet-400 */
+      #C084FC 30%,     /* purple-400 */
+      #E879F9 45%,     /* fuchsia-400 */
+      #F0ABFC 55%,     /* fuchsia-300 */
+      #C084FC 70%,     /* purple-400 */
+      #818CF8 85%,     /* indigo-400 */
+      #7C3AED 100%     /* violet-600 */
   );
   background-size: 400% 400%;
-  animation: gradientShift 20s ease infinite;
+  animation: gradientFlow 20s ease infinite;
 }
 
-@keyframes gradientShift {
+@keyframes gradientFlow {
   0%   { background-position: 0% 50%; }
-  25%  { background-position: 100% 0%; }
-  50%  { background-position: 100% 100%; }
-  75%  { background-position: 0% 100%; }
+  25%  { background-position: 50% 100%; }
+  50%  { background-position: 100% 50%; }
+  75%  { background-position: 50% 0%; }
   100% { background-position: 0% 50%; }
 }
 
 /*
-  Float Animation:
-  Formen bewegen sich sanft in einer organischen Bahn.
-
-  Quelle: CSS transform translate für performante Animationen
-  https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/translate
+  ── BLOB MORPH ──
+  Quelle: https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius
 */
-@keyframes float {
-  0%   { transform: translate(0, 0) scale(1); }
-  25%  { transform: translate(30px, -40px) scale(1.05); }
-  50%  { transform: translate(-20px, 20px) scale(0.95); }
-  75%  { transform: translate(15px, 35px) scale(1.02); }
-  100% { transform: translate(0, 0) scale(1); }
+@keyframes morphBlob1 {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  25%      { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  50%      { border-radius: 70% 30% 40% 60% / 40% 70% 60% 30%; }
+  75%      { border-radius: 40% 70% 60% 30% / 70% 40% 30% 60%; }
+}
+@keyframes morphBlob2 {
+  0%, 100% { border-radius: 40% 60% 60% 40% / 60% 30% 70% 40%; }
+  33%      { border-radius: 60% 40% 30% 70% / 40% 60% 50% 60%; }
+  66%      { border-radius: 50% 50% 70% 30% / 60% 40% 60% 40%; }
+}
+@keyframes morphBlob3 {
+  0%, 100% { border-radius: 70% 30% 50% 50% / 60% 40% 60% 40%; }
+  50%      { border-radius: 30% 70% 40% 60% / 50% 60% 40% 60%; }
+}
+
+/*
+  ── BLOB MOVEMENT ──
+  Quelle: https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/translate
+*/
+@keyframes moveBlob1 {
+  0%, 100% { transform: translate(0, 0); }
+  33%      { transform: translate(30px, -25px); }
+  66%      { transform: translate(-20px, 30px); }
+}
+@keyframes moveBlob2 {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(-40px, 35px); }
+}
+@keyframes moveBlob3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(35px, -30px) scale(1.1); }
+}
+@keyframes moveBlob4 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50%      { transform: translate(-25px, -25px) rotate(180deg); }
+}
+
+/*
+  ── PULSE ──
+  Quelle: https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/scale
+*/
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50%      { transform: scale(1.15); opacity: 0.55; }
 }
 </style>
