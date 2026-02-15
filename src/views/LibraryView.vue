@@ -1,13 +1,25 @@
 <template>
+  <!--
+    LibraryView.vue – Bibliothek mit Artikel-Grid.
+    Glass-Morphism-Karten über dem animierten Hintergrund.
+
+    Quellen:
+    - Tailwind CSS Grid: https://tailwindcss.com/docs/grid-template-columns
+    - Tailwind CSS backdrop-blur: https://tailwindcss.com/docs/backdrop-blur
+    - Vue 3 computed(): https://vuejs.org/guide/essentials/computed.html
+    - Vue 3 onMounted(): https://vuejs.org/api/composition-api-lifecycle.html
+  -->
   <div class="min-h-screen px-4 md:px-8 py-6 sm:py-8">
 
-    <!-- Home Button mit Pfeil nach oben -->
+    <!-- Home Button -->
     <div class="flex justify-center mb-6 sm:mb-8">
       <router-link
           to="/"
-          class="flex items-center gap-3 px-6 sm:px-8 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition-colors"
+          class="flex items-center gap-3 px-6 sm:px-8 py-2.5 sm:py-3
+               bg-white/60 backdrop-blur-sm border border-white/40
+               rounded-full hover:bg-white/80 transition-all"
       >
-        <div class="bg-gray-100 border border-gray-200 rounded-full p-1.5 sm:p-2">
+        <div class="bg-white/50 border border-white/30 rounded-full p-1.5 sm:p-2">
           <ChevronUpIcon class="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
         </div>
         <span class="text-base sm:text-lg text-gray-700">Home</span>
@@ -22,7 +34,11 @@
             v-model="searchQuery"
             type="text"
             placeholder="Durchsuche die Bibliothek..."
-            class="w-full bg-white border border-gray-300 rounded-full pl-14 sm:pl-16 pr-6 sm:pr-8 py-3 sm:py-4 text-base sm:text-lg placeholder:text-gray-400 text-gray-800 outline-none transition-all focus:border-gray-500 focus:shadow-md"
+            class="w-full bg-white/70 backdrop-blur-md border border-white/40
+                 rounded-full pl-14 sm:pl-16 pr-6 sm:pr-8 py-3 sm:py-4
+                 text-base sm:text-lg placeholder:text-gray-400 text-gray-800
+                 outline-none transition-all
+                 focus:bg-white/90 focus:border-white/60 focus:shadow-lg"
         />
       </div>
     </div>
@@ -39,36 +55,36 @@
       <p class="text-base sm:text-lg text-gray-500">Entdecke Inhalte für dein Wohlbefinden</p>
     </div>
 
-    <!-- Loading State -->
+    <!-- Loading -->
     <div v-if="loading" class="text-center py-12">
       <p class="text-gray-500">Artikel werden geladen...</p>
     </div>
 
-    <!-- Grid Layout -->
+    <!-- Grid -->
     <div v-else class="max-w-6xl mx-auto">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-12">
         <router-link
             v-for="(item, index) in filteredItems"
             :key="item.id"
             :to="'/article/' + item.id"
-            class="transform hover:scale-105 transition-all duration-300 animate-fade-in-up"
+            class="transform hover:scale-105 transition-all duration-300"
             :style="{ animationDelay: index * 0.1 + 's' }"
         >
-          <div class="group bg-white border border-gray-200 rounded-2xl sm:rounded-3xl overflow-hidden hover:shadow-lg transition-all cursor-pointer h-full">
+          <div class="group bg-white/60 backdrop-blur-md border border-white/40
+                      rounded-2xl sm:rounded-3xl overflow-hidden
+                      hover:shadow-lg hover:bg-white/80 transition-all cursor-pointer h-full">
 
-            <!-- Bild/Emoji Bereich -->
-            <div class="relative h-40 sm:h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+            <!-- Emoji Bereich -->
+            <div class="relative h-40 sm:h-48 bg-white/30 flex items-center justify-center overflow-hidden">
               <div class="text-5xl sm:text-7xl group-hover:scale-110 transition-transform duration-300">
                 {{ item.emoji }}
               </div>
-
-              <!-- Artikel Icon -->
               <div class="absolute top-3 sm:top-4 right-3 sm:right-4 p-2 sm:p-2.5 bg-gray-700 rounded-full text-white">
                 <FileTextIcon class="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-
-              <!-- Lesezeit Badge -->
-              <div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-gray-200 rounded-full text-xs sm:text-sm text-gray-700">
+              <div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 px-3 sm:px-4 py-1.5 sm:py-2
+                          bg-white/70 backdrop-blur-sm border border-white/40 rounded-full
+                          text-xs sm:text-sm text-gray-700">
                 {{ item.readTime }}
               </div>
             </div>
@@ -99,7 +115,7 @@ import {
   ChevronUp as ChevronUpIcon,
   Search as SearchIcon,
   Sparkles as SparklesIcon,
-  FileText as FileTextIcon
+  FileText as FileTextIcon,
 } from 'lucide-vue-next'
 import { getAllArticles } from '../services/api.js'
 
@@ -114,10 +130,9 @@ onMounted(async () => {
 
 const filteredItems = computed(() => {
   if (!searchQuery.value.trim()) return articles.value
-  const query = searchQuery.value.toLowerCase()
-  return articles.value.filter(item =>
-      item.title.toLowerCase().includes(query) ||
-      item.description.toLowerCase().includes(query)
+  const q = searchQuery.value.toLowerCase()
+  return articles.value.filter(
+      (item) => item.title.toLowerCase().includes(q) || item.description.toLowerCase().includes(q),
   )
 })
 </script>
