@@ -13,12 +13,11 @@
 
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6">
-      <router-link to="/" class="flex flex-col items-center gap-1.5 sm:gap-2 group">
-        <div class="glass rounded-full p-2.5 sm:p-3 group-hover:bg-white/20 transition-all">
-          <ChevronUpIcon class="w-5 h-5 sm:w-6 sm:h-6 text-violet-500" />
-        </div>
-        <span class="text-sm sm:text-base text-violet-700 glass px-4 sm:px-5 py-1.5 sm:py-2 rounded-full
-                     group-hover:bg-white/20 transition-all">
+      <router-link to="/" class="flex flex-col items-center gap-1 group">
+        <ChevronUpIcon class="w-8 h-8 sm:w-10 sm:h-10 text-violet-500 glass-icon
+                              stroke-[1.2] group-hover:opacity-100" />
+        <span class="text-base sm:text-lg font-quicksand text-violet-600 glass-text
+                     group-hover:opacity-100 transition-opacity">
           Zurück
         </span>
       </router-link>

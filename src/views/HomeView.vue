@@ -68,15 +68,14 @@
           </button>
         </div>
 
-        <!-- Bibliothek Navigation (freistehende Glass-Elemente) -->
-        <router-link to="/library" class="flex flex-col items-center gap-2 sm:gap-3 group">
-          <span class="text-lg sm:text-xl text-violet-700 glass px-6 sm:px-8 py-2 sm:py-3 rounded-full
-                       group-hover:bg-white/20 transition-all">
+        <!-- Bibliothek Navigation (freistehend ohne Container) -->
+        <router-link to="/library" class="flex flex-col items-center gap-1 group">
+          <span class="text-xl sm:text-2xl font-quicksand text-violet-600 glass-text
+                       group-hover:opacity-100 transition-opacity">
             Bibliothek
           </span>
-          <div class="glass rounded-full p-3 sm:p-4 group-hover:bg-white/20 transition-all">
-            <ChevronDownIcon class="w-6 h-6 sm:w-8 sm:h-8 text-violet-500" />
-          </div>
+          <ChevronDownIcon class="w-10 h-10 sm:w-12 sm:h-12 text-violet-500 glass-icon
+                                  stroke-[1.2] group-hover:opacity-100" />
         </router-link>
       </div>
     </div>

@@ -11,14 +11,13 @@
   -->
   <div class="min-h-screen px-4 md:px-8 py-6 sm:py-8">
 
-    <!-- Home Navigation (freistehende Glass-Elemente) -->
+    <!-- Home Navigation (freistehend ohne Container) -->
     <div class="flex justify-center mb-6 sm:mb-8">
-      <router-link to="/" class="flex flex-col items-center gap-2 sm:gap-3 group">
-        <div class="glass rounded-full p-3 sm:p-4 group-hover:bg-white/20 transition-all">
-          <ChevronUpIcon class="w-6 h-6 sm:w-8 sm:h-8 text-violet-500" />
-        </div>
-        <span class="text-lg sm:text-xl text-violet-700 glass px-6 sm:px-8 py-2 sm:py-3 rounded-full
-                     group-hover:bg-white/20 transition-all">
+      <router-link to="/" class="flex flex-col items-center gap-1 group">
+        <ChevronUpIcon class="w-10 h-10 sm:w-12 sm:h-12 text-violet-500 glass-icon
+                              stroke-[1.2] group-hover:opacity-100" />
+        <span class="text-xl sm:text-2xl font-quicksand text-violet-600 glass-text
+                     group-hover:opacity-100 transition-opacity">
           Home
         </span>
       </router-link>
