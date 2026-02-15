@@ -21,17 +21,16 @@
 
     <template v-else>
 
-      <!-- Zurück Button -->
+      <!-- Zurück Navigation (freistehende Glass-Elemente) -->
       <div class="flex justify-center mb-6 sm:mb-8">
-        <button
-            @click="goBack"
-            class="flex items-center gap-3 px-6 sm:px-8 py-2.5 sm:py-3
-                 glass rounded-full hover:bg-white/30 transition-all"
-        >
-          <div class="glass-subtle rounded-full p-1.5 sm:p-2">
-            <ChevronUpIcon class="w-4 h-4 sm:w-5 sm:h-5 text-violet-600" />
+        <button @click="goBack" class="flex flex-col items-center gap-2 sm:gap-3 group cursor-pointer">
+          <div class="glass rounded-full p-3 sm:p-4 group-hover:bg-white/20 transition-all">
+            <ChevronUpIcon class="w-6 h-6 sm:w-8 sm:h-8 text-violet-500" />
           </div>
-          <span class="text-base sm:text-lg text-violet-700">Zurück</span>
+          <span class="text-lg sm:text-xl text-violet-700 glass px-6 sm:px-8 py-2 sm:py-3 rounded-full
+                       group-hover:bg-white/20 transition-all">
+            Zurück
+          </span>
         </button>
       </div>
 

@@ -12,15 +12,18 @@
   <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
     <div class="w-full max-w-4xl">
 
-      <!-- Zurück -->
-      <router-link
-          to="/"
-          class="mb-6 sm:mb-8 inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3
-               glass rounded-full hover:bg-white/30 transition-all"
-      >
-        <ArrowLeftIcon class="w-4 h-4 sm:w-5 sm:h-5 text-violet-700" />
-        <span class="text-sm sm:text-base text-violet-700">Zurück</span>
-      </router-link>
+      <!-- Zurück Navigation (freistehende Glass-Elemente) -->
+      <div class="mb-6 sm:mb-8 flex justify-center">
+        <router-link to="/" class="flex flex-col items-center gap-2 sm:gap-3 group">
+          <div class="glass rounded-full p-3 sm:p-4 group-hover:bg-white/20 transition-all">
+            <ChevronUpIcon class="w-6 h-6 sm:w-8 sm:h-8 text-violet-500" />
+          </div>
+          <span class="text-lg sm:text-xl text-violet-700 glass px-6 sm:px-8 py-2 sm:py-3 rounded-full
+                       group-hover:bg-white/20 transition-all">
+            Zurück
+          </span>
+        </router-link>
+      </div>
 
       <!-- Loading -->
       <div v-if="loading" class="glass-strong rounded-2xl sm:rounded-3xl p-6 sm:p-12 text-center">
@@ -94,7 +97,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft as ArrowLeftIcon } from 'lucide-vue-next'
+import { ChevronUp as ChevronUpIcon } from 'lucide-vue-next'
 import { searchArticles } from '../services/api.js'
 
 const route = useRoute()

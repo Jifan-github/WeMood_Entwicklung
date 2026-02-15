@@ -13,17 +13,18 @@
 
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6">
-      <div class="flex items-center gap-3 sm:gap-4">
-        <router-link
-            to="/"
-            class="p-2 sm:p-3 glass rounded-full hover:bg-white/30 transition-all"
-        >
-          <ArrowLeftIcon class="w-4 h-4 sm:w-5 sm:h-5 text-violet-700" />
-        </router-link>
-        <h1 class="text-2xl sm:text-3xl font-quicksand font-semibold text-violet-800">
-          Einstellungen
-        </h1>
-      </div>
+      <router-link to="/" class="flex flex-col items-center gap-1.5 sm:gap-2 group">
+        <div class="glass rounded-full p-2.5 sm:p-3 group-hover:bg-white/20 transition-all">
+          <ChevronUpIcon class="w-5 h-5 sm:w-6 sm:h-6 text-violet-500" />
+        </div>
+        <span class="text-sm sm:text-base text-violet-700 glass px-4 sm:px-5 py-1.5 sm:py-2 rounded-full
+                     group-hover:bg-white/20 transition-all">
+          Zurück
+        </span>
+      </router-link>
+      <h1 class="text-2xl sm:text-3xl font-quicksand font-semibold text-violet-800">
+        Einstellungen
+      </h1>
       <div class="text-xl sm:text-2xl font-quicksand font-semibold text-violet-800">
         WeMood
       </div>
@@ -114,7 +115,7 @@
 <script setup>
 import { ref } from 'vue'
 import {
-  ArrowLeft as ArrowLeftIcon,
+  ChevronUp as ChevronUpIcon,
   Palette as PaletteIcon,
   Sun as SunIcon,
   Moon as MoonIcon,

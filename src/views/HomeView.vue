@@ -1,9 +1,11 @@
 <template>
   <!--
     HomeView.vue – Startseite mit Suchleiste, Emotions-Filter und Bibliothek-Link.
-    Verwendet Glass-Morphism (backdrop-blur) über dem animierten Hintergrund.
+    Verwendet Apple-Style Glass-Morphism über dem animierten Hintergrund.
 
     Quellen:
+    - Apple HIG Materials: https://developer.apple.com/design/human-interface-guidelines/materials
+    - CSS backdrop-filter: https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter
     - Tailwind CSS backdrop-blur: https://tailwindcss.com/docs/backdrop-blur
     - Vue 3 Composition API: https://vuejs.org/api/composition-api-setup.html
     - Vue Router Navigation: https://router.vuejs.org/guide/essentials/navigation.html
@@ -31,11 +33,10 @@
                 v-model="searchQuery"
                 type="text"
                 placeholder="Suche nach Themen..."
-                class="w-full bg-white/35 backdrop-blur-xl border border-white/40
-                     rounded-full px-6 sm:px-8 py-3 sm:py-5 pr-28 sm:pr-32
+                class="w-full glass rounded-full px-6 sm:px-8 py-3 sm:py-5 pr-28 sm:pr-32
                      text-base sm:text-lg placeholder:text-violet-400/50 text-violet-800
                      outline-none transition-all
-                     focus:bg-white/45 focus:border-white/60 focus:shadow-lg"
+                     focus:bg-white/30 focus:shadow-lg"
             />
             <button
                 type="submit"
@@ -60,31 +61,23 @@
               'px-4 sm:px-6 py-2 sm:py-2.5 rounded-full border transition-all text-sm sm:text-base',
               selectedEmotions.includes(emotion.value)
                 ? 'bg-violet-600 border-violet-600 text-white shadow-md'
-                : 'bg-white/30 backdrop-blur-sm border-white/40 text-violet-700 hover:bg-white/50'
+                : 'glass-subtle rounded-full text-violet-700 hover:bg-white/25'
             ]"
           >
             {{ emotion.label }}
           </button>
         </div>
 
-        <!-- Bibliothek -->
-        <div class="flex flex-col items-center gap-3 sm:gap-4">
-          <router-link
-              to="/library"
-              class="px-8 sm:px-12 py-3 sm:py-4 bg-white/30 backdrop-blur-sm
-                   border border-white/40 rounded-full hover:bg-white/50 transition-all"
-          >
-            <span class="text-base sm:text-lg text-violet-700">Bibliothek</span>
-          </router-link>
-
-          <router-link
-              to="/library"
-              class="bg-white/30 backdrop-blur-sm border border-white/40
-                   rounded-full p-2 hover:bg-white/50 transition-all"
-          >
-            <ChevronDownIcon class="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
-          </router-link>
-        </div>
+        <!-- Bibliothek Navigation (freistehende Glass-Elemente) -->
+        <router-link to="/library" class="flex flex-col items-center gap-2 sm:gap-3 group">
+          <span class="text-lg sm:text-xl text-violet-700 glass px-6 sm:px-8 py-2 sm:py-3 rounded-full
+                       group-hover:bg-white/20 transition-all">
+            Bibliothek
+          </span>
+          <div class="glass rounded-full p-3 sm:p-4 group-hover:bg-white/20 transition-all">
+            <ChevronDownIcon class="w-6 h-6 sm:w-8 sm:h-8 text-violet-500" />
+          </div>
+        </router-link>
       </div>
     </div>
   </div>
