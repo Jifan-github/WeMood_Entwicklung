@@ -3,8 +3,6 @@
 
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6">
-
-      <!-- Zurück Button & Titel -->
       <div class="flex items-center gap-3 sm:gap-4">
         <router-link
             to="/"
@@ -16,15 +14,57 @@
           Einstellungen
         </h1>
       </div>
-
-      <!-- Logo -->
       <div class="text-xl sm:text-2xl font-quicksand font-semibold text-gray-800">
         WeMood
       </div>
     </div>
 
     <!-- Inhalt -->
-    <div class="px-4 sm:px-8 py-4 sm:py-6 max-w-5xl mx-auto">
+    <div class="px-4 sm:px-8 py-4 sm:py-6 max-w-5xl mx-auto space-y-4">
+
+      <!-- Konto -->
+      <div class="bg-white border border-gray-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full flex items-center justify-center">
+            <UserIcon class="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+          </div>
+          <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Konto</h2>
+        </div>
+
+        <!-- Logged in -->
+        <router-link
+          v-if="isLoggedIn"
+          to="/account"
+          class="flex items-center justify-between group p-3 sm:p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center">
+              <span class="text-base font-bold text-white font-quicksand">{{ currentUser?.avatar }}</span>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-gray-800">{{ currentUser?.name }}</p>
+              <p class="text-xs text-gray-400">{{ currentUser?.email }}</p>
+            </div>
+          </div>
+          <ChevronRightIcon class="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+        </router-link>
+
+        <!-- Guest -->
+        <div v-else class="flex flex-col sm:flex-row gap-3">
+          <router-link
+            to="/login"
+            class="flex-1 py-3 text-center bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium rounded-2xl transition-colors"
+          >
+            Anmelden
+          </router-link>
+          <router-link
+            to="/register"
+            class="flex-1 py-3 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-2xl transition-colors"
+          >
+            Registrieren
+          </router-link>
+        </div>
+      </div>
 
       <!-- Erscheinungsbild -->
       <div class="bg-white border border-gray-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8">
@@ -111,8 +151,13 @@ import {
   ArrowLeft as ArrowLeftIcon,
   Palette as PaletteIcon,
   Sun as SunIcon,
-  Moon as MoonIcon
+  Moon as MoonIcon,
+  User as UserIcon,
+  ChevronRight as ChevronRightIcon
 } from 'lucide-vue-next'
+import { useAuth } from '../composables/useAuth.js'
+
+const { currentUser, isLoggedIn } = useAuth()
 
 const brightness = ref(80)
 const darkMode = ref(false)

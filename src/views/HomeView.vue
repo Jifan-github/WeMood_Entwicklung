@@ -4,13 +4,13 @@
     <!-- Top Bar -->
     <div class="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6">
 
-      <!-- Logo oben links -->
+      <!-- Logo -->
       <div class="text-xl sm:text-2xl text-gray-800 font-quicksand font-semibold">
         WeMood
       </div>
 
-      <!-- Rechte Seite: Notfall-Button & Einstellungen -->
-      <div class="flex items-center gap-2 sm:gap-4">
+      <!-- Rechte Seite -->
+      <div class="flex items-center gap-2 sm:gap-3">
 
         <!-- Notfall-Hilfe Button -->
         <button
@@ -22,15 +22,32 @@
               : 'bg-red-500 hover:bg-red-600'
           ]"
         >
-          <!-- Pulse ring animation when sensitive -->
-          <span
-            v-if="sensitiveDetected"
-            class="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-60 pointer-events-none"
-          />
+          <span v-if="sensitiveDetected" class="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-60 pointer-events-none" />
           <span class="relative">Notfall-Hilfe</span>
         </button>
 
-        <!-- Einstellungen Icon -->
+        <!-- Logged in: avatar button → account page -->
+        <router-link
+          v-if="isLoggedIn"
+          to="/account"
+          class="w-9 h-9 sm:w-10 sm:h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors shrink-0"
+          :title="currentUser?.name"
+        >
+          <span class="text-sm sm:text-base font-bold text-white font-quicksand">
+            {{ currentUser?.avatar }}
+          </span>
+        </router-link>
+
+        <!-- Not logged in: login button -->
+        <router-link
+          v-else
+          to="/login"
+          class="px-3 sm:px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm sm:text-base rounded-full transition-colors font-medium"
+        >
+          Anmelden
+        </router-link>
+
+        <!-- Einstellungen -->
         <router-link
           to="/settings"
           class="p-2 sm:p-3 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors"
@@ -42,46 +59,40 @@
 
     <!-- Sensitive Topic Banner -->
     <Transition name="banner-slide">
-      <div
-        v-if="sensitiveDetected"
-        class="mx-4 sm:mx-8 mb-2 overflow-hidden"
-      >
+      <div v-if="sensitiveDetected" class="mx-4 sm:mx-8 mb-2 overflow-hidden">
         <div
           class="relative flex items-center gap-3 sm:gap-4 bg-red-50 border border-red-100 rounded-2xl px-4 sm:px-6 py-3 sm:py-4 cursor-pointer group"
           @click="$emit('openEmergency')"
         >
-          <!-- Soft pulsing dot -->
           <span class="relative flex h-3 w-3 shrink-0">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60" />
             <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
           </span>
-
-          <!-- Animated text -->
           <p class="text-sm sm:text-base text-red-700 leading-snug flex-1">
             <span class="font-semibold">Du scheinst gerade etwas Schweres zu durchleben.</span>
             <span class="text-red-500"> Hier findest du sofortige Hilfe und Unterstützung. →</span>
           </p>
-
-          <!-- Dismiss -->
-          <button
-            class="shrink-0 p-1 rounded-full hover:bg-red-100 transition-colors"
-            @click.stop="dismissBanner"
-          >
+          <button class="shrink-0 p-1 rounded-full hover:bg-red-100 transition-colors" @click.stop="dismissBanner">
             <XIcon class="w-4 h-4 text-red-400" />
           </button>
         </div>
       </div>
     </Transition>
 
-    <!-- Zentrum: Logo + Suchleiste + Emotions + Bibliothek -->
+    <!-- Zentrum -->
     <div class="flex-1 flex flex-col items-center justify-center px-4 sm:px-6">
       <div class="w-full max-w-3xl">
 
-        <!-- Großes Logo -->
+        <!-- Greeting / Logo -->
         <div class="text-center mb-8 sm:mb-12">
           <h1 class="text-5xl sm:text-7xl md:text-8xl font-quicksand font-bold text-gray-800">
             WeMood
           </h1>
+          <Transition name="greeting-fade">
+            <p v-if="isLoggedIn" class="text-gray-500 mt-3 text-base sm:text-lg">
+              Hallo, <span class="font-semibold text-gray-700">{{ currentUser?.name }}</span> 👋
+            </p>
+          </Transition>
         </div>
 
         <!-- Suchleiste -->
@@ -133,7 +144,6 @@
           >
             <span class="text-base sm:text-lg text-gray-700">Bibliothek</span>
           </router-link>
-
           <router-link to="/library" class="bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-100 transition-colors">
             <ChevronDownIcon class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
           </router-link>
@@ -147,8 +157,10 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search as SearchIcon, Settings as SettingsIcon, ChevronDown as ChevronDownIcon, X as XIcon } from 'lucide-vue-next'
+import { useAuth } from '../composables/useAuth.js'
 
 const router = useRouter()
+const { currentUser, isLoggedIn } = useAuth()
 
 defineEmits(['openEmergency'])
 
@@ -156,7 +168,6 @@ const searchQuery = ref('')
 const selectedEmotions = ref([])
 const bannerDismissed = ref(false)
 
-// Sensitive keywords to watch for
 const sensitiveKeywords = [
   'suizid', 'suicide', 'selbstmord', 'selbstverletzung', 'self-harm', 'self harm',
   'sterben', 'sterben wollen', 'nicht mehr leben', 'tod', 'töten', 'umbringen',
@@ -173,17 +184,13 @@ const sensitiveDetected = computed(() => {
   return sensitiveKeywords.some(kw => q.includes(kw))
 })
 
-// Reset dismiss when query changes significantly
 watch(searchQuery, (newVal, oldVal) => {
-  // If the user clears or changes the query, re-enable the banner
   if (newVal.toLowerCase().trim() !== oldVal.toLowerCase().trim()) {
     bannerDismissed.value = false
   }
 })
 
-function dismissBanner() {
-  bannerDismissed.value = true
-}
+function dismissBanner() { bannerDismissed.value = true }
 
 const emotions = [
   { label: 'Fear', value: 'fear' },
@@ -205,45 +212,24 @@ function toggleEmotion(emotion) {
 function handleSearch() {
   router.push({
     name: 'search',
-    query: {
-      q: searchQuery.value || 'mental health',
-      emotions: selectedEmotions.value.join(',')
-    }
+    query: { q: searchQuery.value || 'mental health', emotions: selectedEmotions.value.join(',') }
   })
 }
 </script>
 
 <style scoped>
-.banner-slide-enter-active {
-  animation: bannerIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
-}
-.banner-slide-leave-active {
-  animation: bannerOut 0.25s ease-in forwards;
-}
+.banner-slide-enter-active { animation: bannerIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1); }
+.banner-slide-leave-active { animation: bannerOut 0.25s ease-in forwards; }
 
 @keyframes bannerIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.98);
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    max-height: 120px;
-  }
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); max-height: 0; }
+  to   { opacity: 1; transform: translateY(0) scale(1);       max-height: 120px; }
+}
+@keyframes bannerOut {
+  from { opacity: 1; transform: translateY(0) scale(1);        max-height: 120px; }
+  to   { opacity: 0; transform: translateY(-6px) scale(0.98);  max-height: 0; }
 }
 
-@keyframes bannerOut {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    max-height: 120px;
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-6px) scale(0.98);
-    max-height: 0;
-  }
-}
+.greeting-fade-enter-active, .greeting-fade-leave-active { transition: all 0.4s ease; }
+.greeting-fade-enter-from, .greeting-fade-leave-to { opacity: 0; transform: translateY(6px); }
 </style>
