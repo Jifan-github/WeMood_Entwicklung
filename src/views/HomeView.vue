@@ -14,21 +14,64 @@
 
         <!-- Notfall-Hilfe Button -->
         <button
-            @click="$emit('openEmergency')"
-            class="px-3 sm:px-6 py-2 bg-red-500 text-white text-sm sm:text-base rounded-full hover:bg-red-600 transition-colors"
+          @click="$emit('openEmergency')"
+          :class="[
+            'relative px-3 sm:px-6 py-2 text-white text-sm sm:text-base rounded-full transition-all duration-500 overflow-visible',
+            sensitiveDetected
+              ? 'bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.25)] scale-105'
+              : 'bg-red-500 hover:bg-red-600'
+          ]"
         >
-          Notfall-Hilfe
+          <!-- Pulse ring animation when sensitive -->
+          <span
+            v-if="sensitiveDetected"
+            class="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-60 pointer-events-none"
+          />
+          <span class="relative">Notfall-Hilfe</span>
         </button>
 
         <!-- Einstellungen Icon -->
         <router-link
-            to="/settings"
-            class="p-2 sm:p-3 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors"
+          to="/settings"
+          class="p-2 sm:p-3 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors"
         >
           <SettingsIcon class="w-5 h-5 text-gray-700" />
         </router-link>
       </div>
     </div>
+
+    <!-- Sensitive Topic Banner -->
+    <Transition name="banner-slide">
+      <div
+        v-if="sensitiveDetected"
+        class="mx-4 sm:mx-8 mb-2 overflow-hidden"
+      >
+        <div
+          class="relative flex items-center gap-3 sm:gap-4 bg-red-50 border border-red-100 rounded-2xl px-4 sm:px-6 py-3 sm:py-4 cursor-pointer group"
+          @click="$emit('openEmergency')"
+        >
+          <!-- Soft pulsing dot -->
+          <span class="relative flex h-3 w-3 shrink-0">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60" />
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+          </span>
+
+          <!-- Animated text -->
+          <p class="text-sm sm:text-base text-red-700 leading-snug flex-1">
+            <span class="font-semibold">Du scheinst gerade etwas Schweres zu durchleben.</span>
+            <span class="text-red-500"> Hier findest du sofortige Hilfe und Unterstützung. →</span>
+          </p>
+
+          <!-- Dismiss -->
+          <button
+            class="shrink-0 p-1 rounded-full hover:bg-red-100 transition-colors"
+            @click.stop="dismissBanner"
+          >
+            <XIcon class="w-4 h-4 text-red-400" />
+          </button>
+        </div>
+      </div>
+    </Transition>
 
     <!-- Zentrum: Logo + Suchleiste + Emotions + Bibliothek -->
     <div class="flex-1 flex flex-col items-center justify-center px-4 sm:px-6">
@@ -45,14 +88,19 @@
         <form @submit.prevent="handleSearch" class="mb-6 sm:mb-8">
           <div class="relative">
             <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Suche nach Themen..."
-                class="w-full bg-white border border-gray-300 rounded-full px-6 sm:px-8 py-3 sm:py-5 pr-28 sm:pr-32 text-base sm:text-lg placeholder:text-gray-400 text-gray-800 outline-none transition-all focus:border-gray-500 focus:shadow-md"
+              v-model="searchQuery"
+              type="text"
+              placeholder="Suche nach Themen..."
+              :class="[
+                'w-full bg-white border rounded-full px-6 sm:px-8 py-3 sm:py-5 pr-28 sm:pr-32 text-base sm:text-lg placeholder:text-gray-400 text-gray-800 outline-none transition-all duration-300',
+                sensitiveDetected
+                  ? 'border-red-300 shadow-[0_0_0_3px_rgba(239,68,68,0.12)] focus:border-red-400'
+                  : 'border-gray-300 focus:border-gray-500 focus:shadow-md'
+              ]"
             />
             <button
-                type="submit"
-                class="absolute right-2 top-1/2 -translate-y-1/2 px-4 sm:px-8 py-2 sm:py-3 bg-gray-700 rounded-full hover:bg-gray-800 transition-colors flex items-center gap-2 text-white text-sm sm:text-base"
+              type="submit"
+              class="absolute right-2 top-1/2 -translate-y-1/2 px-4 sm:px-8 py-2 sm:py-3 bg-gray-700 rounded-full hover:bg-gray-800 transition-colors flex items-center gap-2 text-white text-sm sm:text-base"
             >
               <SearchIcon class="w-4 h-4 sm:w-5 sm:h-5" />
               <span class="hidden sm:inline">Suchen</span>
@@ -63,10 +111,10 @@
         <!-- Emotion Filter Tags -->
         <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-10 sm:mb-16">
           <button
-              v-for="emotion in emotions"
-              :key="emotion.value"
-              @click="toggleEmotion(emotion.value)"
-              :class="[
+            v-for="emotion in emotions"
+            :key="emotion.value"
+            @click="toggleEmotion(emotion.value)"
+            :class="[
               'px-4 sm:px-6 py-2 sm:py-2.5 rounded-full border transition-colors text-sm sm:text-base',
               selectedEmotions.includes(emotion.value)
                 ? 'bg-gray-700 border-gray-700 text-white'
@@ -80,13 +128,12 @@
         <!-- Bibliothek Button -->
         <div class="flex flex-col items-center gap-3 sm:gap-4">
           <router-link
-              to="/library"
-              class="px-8 sm:px-12 py-3 sm:py-4 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition-colors"
+            to="/library"
+            class="px-8 sm:px-12 py-3 sm:py-4 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition-colors"
           >
             <span class="text-base sm:text-lg text-gray-700">Bibliothek</span>
           </router-link>
 
-          <!-- Pfeil nach unten -->
           <router-link to="/library" class="bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-100 transition-colors">
             <ChevronDownIcon class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
           </router-link>
@@ -97,9 +144,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search as SearchIcon, Settings as SettingsIcon, ChevronDown as ChevronDownIcon } from 'lucide-vue-next'
+import { Search as SearchIcon, Settings as SettingsIcon, ChevronDown as ChevronDownIcon, X as XIcon } from 'lucide-vue-next'
 
 const router = useRouter()
 
@@ -107,6 +154,36 @@ defineEmits(['openEmergency'])
 
 const searchQuery = ref('')
 const selectedEmotions = ref([])
+const bannerDismissed = ref(false)
+
+// Sensitive keywords to watch for
+const sensitiveKeywords = [
+  'suizid', 'suicide', 'selbstmord', 'selbstverletzung', 'self-harm', 'self harm',
+  'sterben', 'sterben wollen', 'nicht mehr leben', 'tod', 'töten', 'umbringen',
+  'hoffnungslos', 'hoffnungslosigkeit', 'depression', 'verzweiflung', 'krise',
+  'crisis', 'harming', 'cutting', 'overdose', 'überdosis', 'missbrauch', 'abuse',
+  'trauma', 'panic attack', 'panikattacke', 'angststörung', 'eating disorder',
+  'essstörung', 'magersucht', 'anorexia', 'bulimia'
+]
+
+const sensitiveDetected = computed(() => {
+  if (bannerDismissed.value) return false
+  const q = searchQuery.value.toLowerCase().trim()
+  if (!q) return false
+  return sensitiveKeywords.some(kw => q.includes(kw))
+})
+
+// Reset dismiss when query changes significantly
+watch(searchQuery, (newVal, oldVal) => {
+  // If the user clears or changes the query, re-enable the banner
+  if (newVal.toLowerCase().trim() !== oldVal.toLowerCase().trim()) {
+    bannerDismissed.value = false
+  }
+})
+
+function dismissBanner() {
+  bannerDismissed.value = true
+}
 
 const emotions = [
   { label: 'Fear', value: 'fear' },
@@ -135,3 +212,38 @@ function handleSearch() {
   })
 }
 </script>
+
+<style scoped>
+.banner-slide-enter-active {
+  animation: bannerIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.banner-slide-leave-active {
+  animation: bannerOut 0.25s ease-in forwards;
+}
+
+@keyframes bannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 120px;
+  }
+}
+
+@keyframes bannerOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 120px;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+    max-height: 0;
+  }
+}
+</style>
