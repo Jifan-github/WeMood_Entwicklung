@@ -21,48 +21,40 @@
 
 /*
   Apple Liquid Glass Utilities.
-  Inspiriert vom Apple-Design: Elemente wirken wie fluessiges Glas –
-  durchscheinend mit Farbsaettigung, weichem Blur und subtilen Raendern.
-
-  Drei Stufen:
-  - glass:        Standard fuer Karten und Container
-  - glass-strong: Fuer Hauptpanels die mehr Lesbarkeit brauchen
-  - glass-subtle: Fuer kleine Elemente (Chips, Badges, Icons)
+  Transparenter, "dickfluessiger" Effekt: starker Blur + hohe Saettigung
+  verzerren den Hintergrund an den Raendern sichtbar (wie bei Apple).
+  Weniger Weiss-Anteil als Standard-Glassmorphism.
 
   Quellen:
-  - Apple HIG Materials (Glassmorphism-Designprinzip):
-    https://developer.apple.com/design/human-interface-guidelines/materials
-  - CSS backdrop-filter (blur + saturate Kombination):
-    https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter
-  - CSS box-shadow fuer Tiefenwirkung:
-    https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow
-  - Tailwind CSS @utility (Custom Utility-Klassen in v4):
-    https://tailwindcss.com/docs/adding-custom-styles
+  - Apple HIG Materials: https://developer.apple.com/design/human-interface-guidelines/materials
+  - CSS backdrop-filter (blur + saturate): https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter
+  - CSS box-shadow (inset Lichtrand): https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow
+  - Tailwind CSS @utility (v4): https://tailwindcss.com/docs/adding-custom-styles
 */
 @utility glass {
-    background: rgba(255, 255, 255, 0.22);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(28px) saturate(200%) brightness(1.05);
+    -webkit-backdrop-filter: blur(28px) saturate(200%) brightness(1.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow:
+            0 4px 24px rgba(107, 70, 193, 0.06),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+@utility glass-strong {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(32px) saturate(220%) brightness(1.08);
+    -webkit-backdrop-filter: blur(32px) saturate(220%) brightness(1.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow:
             0 8px 32px rgba(107, 70, 193, 0.08),
             inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-@utility glass-strong {
-    background: rgba(255, 255, 255, 0.32);
-    backdrop-filter: blur(28px) saturate(200%);
-    -webkit-backdrop-filter: blur(28px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    box-shadow:
-            0 8px 32px rgba(107, 70, 193, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
 @utility glass-subtle {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px) saturate(180%) brightness(1.03);
+    -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.03);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
