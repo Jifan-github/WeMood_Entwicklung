@@ -2,18 +2,21 @@
   <!--
     ArticleDetailView.vue – Detailansicht eines Artikels mit horizontalem Scroll.
     4 Karten: Überblick, Literatur, Videos, Fazit.
+    Verwendet Apple Liquid Glass Utilities aus style.css.
 
     Quellen:
     - CSS Scroll Snap: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_scroll_snap
     - Tailwind CSS scroll-snap: https://tailwindcss.com/docs/scroll-snap-type
     - Vue 3 Template Refs: https://vuejs.org/guide/essentials/template-refs.html
     - Vue Router useRoute/useRouter: https://router.vuejs.org/guide/advanced/composition-api.html
+    - Apple HIG Materials: https://developer.apple.com/design/human-interface-guidelines/materials
+    - CSS backdrop-filter: https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter
   -->
   <div class="min-h-screen px-4 sm:px-6 py-6 sm:py-10">
 
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
-      <p class="text-gray-500">Artikel wird geladen...</p>
+      <p class="text-violet-500">Artikel wird geladen...</p>
     </div>
 
     <template v-else>
@@ -23,13 +26,12 @@
         <button
             @click="goBack"
             class="flex items-center gap-3 px-6 sm:px-8 py-2.5 sm:py-3
-                 bg-white/60 backdrop-blur-sm border border-white/40
-                 rounded-full hover:bg-white/80 transition-all"
+                 glass rounded-full hover:bg-white/30 transition-all"
         >
-          <div class="bg-white/50 border border-white/30 rounded-full p-1.5 sm:p-2">
-            <ChevronUpIcon class="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+          <div class="glass-subtle rounded-full p-1.5 sm:p-2">
+            <ChevronUpIcon class="w-4 h-4 sm:w-5 sm:h-5 text-violet-600" />
           </div>
-          <span class="text-base sm:text-lg text-gray-700">Zurück</span>
+          <span class="text-base sm:text-lg text-violet-700">Zurück</span>
         </button>
       </div>
 
@@ -41,12 +43,12 @@
             @click="scrollToScreen(index)"
             class="flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-full transition-all duration-300"
             :class="currentScreen === index
-            ? 'bg-white/70 backdrop-blur-sm border border-white/40 text-gray-800'
-            : 'text-gray-400 hover:text-gray-600'"
+            ? 'glass text-violet-800'
+            : 'text-violet-400 hover:text-violet-600'"
         >
           <div
               class="w-2 h-2 rounded-full transition-all duration-300"
-              :class="currentScreen === index ? 'bg-gray-700' : 'bg-gray-300'"
+              :class="currentScreen === index ? 'bg-violet-600' : 'bg-violet-300'"
           />
           <span class="text-xs sm:text-sm">{{ screen }}</span>
         </button>
@@ -63,38 +65,37 @@
 
           <!-- Karte 1: Überblick -->
           <div class="w-full flex-shrink-0 snap-center">
-            <div class="bg-white/70 backdrop-blur-md border border-white/40
-                        rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-10">
+            <div class="glass-strong rounded-2xl sm:rounded-3xl p-6 sm:p-10">
               <div class="text-center mb-6 sm:mb-8">
                 <div class="text-4xl sm:text-5xl mb-3">{{ article.emoji }}</div>
-                <h2 class="text-2xl sm:text-3xl font-quicksand font-semibold text-gray-800 mb-2">
+                <h2 class="text-2xl sm:text-3xl font-quicksand font-semibold text-violet-800 mb-2">
                   {{ article.title }}
                 </h2>
-                <p class="text-sm text-gray-400">{{ article.readTime }}</p>
+                <p class="text-sm text-violet-400">{{ article.readTime }}</p>
               </div>
 
               <div class="mb-6 sm:mb-8">
-                <h3 class="text-lg sm:text-xl font-quicksand font-semibold text-gray-800 mb-3">Überblick</h3>
-                <p class="text-sm sm:text-base text-gray-600 leading-relaxed">{{ article.overview }}</p>
+                <h3 class="text-lg sm:text-xl font-quicksand font-semibold text-violet-800 mb-3">Überblick</h3>
+                <p class="text-sm sm:text-base text-violet-600 leading-relaxed">{{ article.overview }}</p>
               </div>
 
               <div class="mb-6 sm:mb-8">
-                <h3 class="text-lg sm:text-xl font-quicksand font-semibold text-gray-800 mb-3">Wichtige Fakten</h3>
+                <h3 class="text-lg sm:text-xl font-quicksand font-semibold text-violet-800 mb-3">Wichtige Fakten</h3>
                 <div class="space-y-3">
                   <div v-for="(fact, i) in article.facts" :key="i" class="flex items-start gap-3">
-                    <div class="w-7 h-7 bg-white/50 border border-white/30 rounded-full
+                    <div class="w-7 h-7 glass-subtle rounded-full
                                 flex items-center justify-center shrink-0 mt-0.5">
-                      <span class="text-xs font-semibold text-gray-600">{{ i + 1 }}</span>
+                      <span class="text-xs font-semibold text-violet-600">{{ i + 1 }}</span>
                     </div>
-                    <p class="text-sm sm:text-base text-gray-600 leading-relaxed">{{ fact }}</p>
+                    <p class="text-sm sm:text-base text-violet-600 leading-relaxed">{{ fact }}</p>
                   </div>
                 </div>
               </div>
 
               <div class="flex justify-center">
                 <button @click="scrollToScreen(1)" class="nav-btn">
-                  <span class="text-sm text-gray-600">Literatur & Vorschläge</span>
-                  <ChevronRightIcon class="w-4 h-4 text-gray-500" />
+                  <span class="text-sm text-violet-600">Literatur & Vorschläge</span>
+                  <ChevronRightIcon class="w-4 h-4 text-violet-500" />
                 </button>
               </div>
             </div>
@@ -102,11 +103,10 @@
 
           <!-- Karte 2: Literatur -->
           <div class="w-full flex-shrink-0 snap-center">
-            <div class="bg-white/70 backdrop-blur-md border border-white/40
-                        rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-10">
+            <div class="glass-strong rounded-2xl sm:rounded-3xl p-6 sm:p-10">
               <div class="text-center mb-6 sm:mb-8">
-                <BookOpenIcon class="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                <h2 class="text-2xl sm:text-3xl font-quicksand font-semibold text-gray-800">
+                <BookOpenIcon class="w-10 h-10 text-violet-400 mx-auto mb-3" />
+                <h2 class="text-2xl sm:text-3xl font-quicksand font-semibold text-violet-800">
                   Literatur & Vorschläge
                 </h2>
               </div>
@@ -114,17 +114,17 @@
               <div class="space-y-4 mb-6 sm:mb-8">
                 <div
                     v-for="(book, i) in article.literature" :key="i"
-                    class="bg-white/50 border border-white/30 rounded-xl sm:rounded-2xl p-4 sm:p-5"
+                    class="glass-subtle rounded-xl sm:rounded-2xl p-4 sm:p-5"
                 >
                   <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 bg-white/60 border border-white/30 rounded-xl
+                    <div class="w-10 h-10 glass-subtle rounded-xl
                                 flex items-center justify-center shrink-0">
-                      <BookOpenIcon class="w-5 h-5 text-gray-500" />
+                      <BookOpenIcon class="w-5 h-5 text-violet-500" />
                     </div>
                     <div>
-                      <h4 class="text-sm sm:text-base font-semibold text-gray-800 mb-0.5">{{ book.title }}</h4>
-                      <p class="text-xs sm:text-sm text-gray-500 mb-1">{{ book.author }}</p>
-                      <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">{{ book.description }}</p>
+                      <h4 class="text-sm sm:text-base font-semibold text-violet-800 mb-0.5">{{ book.title }}</h4>
+                      <p class="text-xs sm:text-sm text-violet-500 mb-1">{{ book.author }}</p>
+                      <p class="text-xs sm:text-sm text-violet-600 leading-relaxed">{{ book.description }}</p>
                     </div>
                   </div>
                 </div>
@@ -132,8 +132,8 @@
 
               <div class="flex justify-center">
                 <button @click="scrollToScreen(2)" class="nav-btn">
-                  <span class="text-sm text-gray-600">Videos & Filme</span>
-                  <ChevronRightIcon class="w-4 h-4 text-gray-500" />
+                  <span class="text-sm text-violet-600">Videos & Filme</span>
+                  <ChevronRightIcon class="w-4 h-4 text-violet-500" />
                 </button>
               </div>
             </div>
@@ -141,11 +141,10 @@
 
           <!-- Karte 3: Videos -->
           <div class="w-full flex-shrink-0 snap-center">
-            <div class="bg-white/70 backdrop-blur-md border border-white/40
-                        rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-10">
+            <div class="glass-strong rounded-2xl sm:rounded-3xl p-6 sm:p-10">
               <div class="text-center mb-6 sm:mb-8">
-                <PlayCircleIcon class="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                <h2 class="text-2xl sm:text-3xl font-quicksand font-semibold text-gray-800">
+                <PlayCircleIcon class="w-10 h-10 text-violet-400 mx-auto mb-3" />
+                <h2 class="text-2xl sm:text-3xl font-quicksand font-semibold text-violet-800">
                   Videos & Filme
                 </h2>
               </div>
@@ -153,17 +152,17 @@
               <div class="space-y-4 mb-6 sm:mb-8">
                 <div
                     v-for="(video, i) in article.videos" :key="i"
-                    class="bg-white/50 border border-white/30 rounded-xl sm:rounded-2xl p-4 sm:p-5"
+                    class="glass-subtle rounded-xl sm:rounded-2xl p-4 sm:p-5"
                 >
                   <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 bg-white/60 border border-white/30 rounded-xl
+                    <div class="w-10 h-10 glass-subtle rounded-xl
                                 flex items-center justify-center shrink-0">
-                      <PlayCircleIcon class="w-5 h-5 text-gray-500" />
+                      <PlayCircleIcon class="w-5 h-5 text-violet-500" />
                     </div>
                     <div>
-                      <h4 class="text-sm sm:text-base font-semibold text-gray-800 mb-0.5">{{ video.title }}</h4>
-                      <p class="text-xs sm:text-sm text-gray-500 mb-1">{{ video.duration }}</p>
-                      <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">{{ video.description }}</p>
+                      <h4 class="text-sm sm:text-base font-semibold text-violet-800 mb-0.5">{{ video.title }}</h4>
+                      <p class="text-xs sm:text-sm text-violet-500 mb-1">{{ video.duration }}</p>
+                      <p class="text-xs sm:text-sm text-violet-600 leading-relaxed">{{ video.description }}</p>
                     </div>
                   </div>
                 </div>
@@ -171,8 +170,8 @@
 
               <div class="flex justify-center">
                 <button @click="scrollToScreen(3)" class="nav-btn">
-                  <span class="text-sm text-gray-600">Fazit</span>
-                  <ChevronRightIcon class="w-4 h-4 text-gray-500" />
+                  <span class="text-sm text-violet-600">Fazit</span>
+                  <ChevronRightIcon class="w-4 h-4 text-violet-500" />
                 </button>
               </div>
             </div>
@@ -180,25 +179,24 @@
 
           <!-- Karte 4: Fazit -->
           <div class="w-full flex-shrink-0 snap-center">
-            <div class="bg-white/70 backdrop-blur-md border border-white/40
-                        rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-10">
+            <div class="glass-strong rounded-2xl sm:rounded-3xl p-6 sm:p-10">
               <div class="text-center mb-6 sm:mb-8">
-                <CheckCircleIcon class="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                <h2 class="text-2xl sm:text-3xl font-quicksand font-semibold text-gray-800">Fazit</h2>
+                <CheckCircleIcon class="w-10 h-10 text-violet-400 mx-auto mb-3" />
+                <h2 class="text-2xl sm:text-3xl font-quicksand font-semibold text-violet-800">Fazit</h2>
               </div>
 
               <div class="mb-6 sm:mb-8">
-                <p class="text-sm sm:text-base text-gray-600 leading-relaxed">{{ article.conclusion }}</p>
+                <p class="text-sm sm:text-base text-violet-600 leading-relaxed">{{ article.conclusion }}</p>
               </div>
 
               <div class="mb-6 sm:mb-8">
-                <h3 class="text-lg sm:text-xl font-quicksand font-semibold text-gray-800 mb-3">
+                <h3 class="text-lg sm:text-xl font-quicksand font-semibold text-violet-800 mb-3">
                   Wichtigste Erkenntnisse
                 </h3>
                 <div class="space-y-3">
                   <div v-for="(t, i) in article.takeaways" :key="i" class="flex items-start gap-3">
-                    <CheckCircleIcon class="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                    <p class="text-sm sm:text-base text-gray-600">{{ t }}</p>
+                    <CheckCircleIcon class="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                    <p class="text-sm sm:text-base text-violet-600">{{ t }}</p>
                   </div>
                 </div>
               </div>
@@ -206,8 +204,8 @@
               <div class="flex justify-center">
                 <button
                     @click="goBack"
-                    class="flex items-center gap-2 px-5 py-2.5 bg-gray-700 text-white
-                         rounded-full hover:bg-gray-800 transition-colors"
+                    class="flex items-center gap-2 px-5 py-2.5 bg-violet-600/90 text-white
+                         rounded-full hover:bg-violet-600 transition-colors"
                 >
                   <ArrowLeftIcon class="w-4 h-4" />
                   <span class="text-sm">Zurück</span>
@@ -280,7 +278,7 @@ function goBack() {
 
 .nav-btn {
   @apply flex items-center gap-2 px-5 py-2.5
-  bg-white/50 border border-white/30 rounded-full
-  hover:bg-white/70 transition-all;
+  glass rounded-full
+  hover:bg-white/30 transition-all;
 }
 </style>
