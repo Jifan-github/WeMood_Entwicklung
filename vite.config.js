@@ -7,4 +7,6 @@ export default defineConfig({
         vue(),
         tailwindcss()
     ]
+    // No proxy needed — Supabase is a remote hosted service,
+    // all requests go directly to https://xxxx.supabase.co
 })

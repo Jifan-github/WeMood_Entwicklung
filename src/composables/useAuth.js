@@ -1,87 +1,113 @@
 /**
  * useAuth — WeMood Authentication Composable
+ * Powered by Supabase Auth
  *
- * Currently uses localStorage as a mock backend.
- * To connect a real API, replace the functions marked with TODO.
+ * Supabase handles:
+ *  - JWT access + refresh tokens (stored securely in localStorage by the SDK)
+ *  - Email verification (sends the email automatically on register)
+ *  - Password hashing (bcrypt, handled server-side)
+ *  - Session restore on page reload
  *
- * Shared reactive state across all components via module-level refs.
+ * This file is the only place in the app that touches Supabase Auth.
+ * All other files use api.js for data.
  */
 
 import { ref, computed } from 'vue'
+import { supabase } from '../lib/supabase.js'
 
-// ── Shared state (module-level = singleton across all components) ──
-const currentUser = ref(JSON.parse(localStorage.getItem('wemood_user') || 'null'))
-const authError = ref(null)
+// ── Shared reactive state (singleton across all components) ───────────
+const currentUser = ref(null)
+const authError   = ref(null)
 const authLoading = ref(false)
 
-// ── Helpers ──────────────────────────────────────────────────────────
-function getUsers() {
-  return JSON.parse(localStorage.getItem('wemood_users') || '[]')
-}
-
-function saveUsers(users) {
-  localStorage.setItem('wemood_users', JSON.stringify(users))
-}
-
-function setCurrentUser(user) {
-  currentUser.value = user
-  if (user) {
-    localStorage.setItem('wemood_user', JSON.stringify(user))
-  } else {
-    localStorage.removeItem('wemood_user')
+// ── Internal helpers ──────────────────────────────────────────────────
+function buildUserObject(supabaseUser) {
+  if (!supabaseUser) return null
+  const meta = supabaseUser.user_metadata || {}
+  return {
+    id:            supabaseUser.id,
+    email:         supabaseUser.email,
+    name:          meta.name || supabaseUser.email.split('@')[0],
+    avatar:        (meta.name || supabaseUser.email).charAt(0).toUpperCase(),
+    createdAt:     supabaseUser.created_at,
+    emailVerified: !!supabaseUser.email_confirmed_at
   }
 }
 
-function hashPassword(password) {
-  // Simple deterministic hash for mock purposes — NOT secure for production
-  // TODO: Replace with bcrypt/proper hashing on the backend
-  let hash = 0
-  for (let i = 0; i < password.length; i++) {
-    hash = ((hash << 5) - hash) + password.charCodeAt(i)
-    hash |= 0
-  }
-  return hash.toString(36)
+function parseSupabaseError(error) {
+  if (!error) return 'Ein unbekannter Fehler ist aufgetreten.'
+  // Map common Supabase error messages to German
+  const msg = error.message || ''
+  if (msg.includes('already registered') || msg.includes('User already registered'))
+    return 'Diese E-Mail-Adresse ist bereits registriert.'
+  if (msg.includes('Invalid login credentials'))
+    return 'E-Mail oder Passwort ist falsch.'
+  if (msg.includes('Email not confirmed'))
+    return 'Bitte bestätige zuerst deine E-Mail-Adresse. Schau in deinen Posteingang.'
+  if (msg.includes('Password should be at least'))
+    return 'Das Passwort muss mindestens 6 Zeichen lang sein.'
+  if (msg.includes('Unable to validate email address'))
+    return 'Bitte gib eine gültige E-Mail-Adresse ein.'
+  if (msg.includes('over_email_send_rate_limit') || msg.includes('rate limit'))
+    return 'Zu viele Versuche. Bitte warte kurz und versuche es erneut.'
+  return msg || 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.'
 }
 
-// ── Composable ───────────────────────────────────────────────────────
+// ── Composable ────────────────────────────────────────────────────────
 export function useAuth() {
   const isLoggedIn = computed(() => currentUser.value !== null)
 
   /**
+   * Called once in App.vue on mount.
+   * Restores session from Supabase's localStorage cache,
+   * then listens for auth state changes (login, logout, token refresh).
+   */
+  async function initAuth() {
+    // Get current session (Supabase restores it from localStorage automatically)
+    const { data: { session } } = await supabase.auth.getSession()
+    currentUser.value = buildUserObject(session?.user ?? null)
+
+    // Keep reactive state in sync with Supabase's internal state
+    supabase.auth.onAuthStateChange((_event, session) => {
+      currentUser.value = buildUserObject(session?.user ?? null)
+    })
+  }
+
+  /**
    * Register a new account.
-   * TODO: Replace body with: await fetch('/api/auth/register', { method: 'POST', body: JSON.stringify({name, email, password}) })
+   * Supabase automatically sends a verification email.
+   * The user must click the link before they can log in
+   * (controlled by "Confirm email" setting in Supabase dashboard).
    */
   async function register({ name, email, password }) {
     authLoading.value = true
-    authError.value = null
-
-    // Simulate network delay
-    await new Promise(r => setTimeout(r, 600))
+    authError.value   = null
 
     try {
-      const users = getUsers()
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name: name.trim() },           // stored in user_metadata
+          emailRedirectTo: `${window.location.origin}/verify-email`
+        }
+      })
 
-      if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-        authError.value = 'Diese E-Mail-Adresse ist bereits registriert.'
+      if (error) {
+        authError.value = parseSupabaseError(error)
         return false
       }
 
-      const newUser = {
-        id: Date.now().toString(),
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
-        passwordHash: hashPassword(password),
-        createdAt: new Date().toISOString(),
-        avatar: name.trim().charAt(0).toUpperCase()
+      // If email confirmation is required, data.user exists but session is null
+      // We return 'verify' so the UI can show "check your email" screen
+      if (data.user && !data.session) {
+        return 'verify'
       }
 
-      users.push(newUser)
-      saveUsers(users)
-
-      // Log in immediately after registration
-      const { passwordHash, ...safeUser } = newUser
-      setCurrentUser(safeUser)
       return true
+    } catch (e) {
+      authError.value = 'Netzwerkfehler. Bitte überprüfe deine Verbindung.'
+      return false
     } finally {
       authLoading.value = false
     }
@@ -89,82 +115,99 @@ export function useAuth() {
 
   /**
    * Log in with email + password.
-   * TODO: Replace body with: await fetch('/api/auth/login', { method: 'POST', body: JSON.stringify({email, password}) })
    */
   async function login({ email, password }) {
     authLoading.value = true
-    authError.value = null
-
-    await new Promise(r => setTimeout(r, 600))
+    authError.value   = null
 
     try {
-      const users = getUsers()
-      const user = users.find(
-        u => u.email.toLowerCase() === email.toLowerCase() &&
-             u.passwordHash === hashPassword(password)
-      )
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-      if (!user) {
-        authError.value = 'E-Mail oder Passwort ist falsch.'
+      if (error) {
+        authError.value = parseSupabaseError(error)
         return false
       }
 
-      const { passwordHash, ...safeUser } = user
-      setCurrentUser(safeUser)
       return true
+    } catch {
+      authError.value = 'Netzwerkfehler. Bitte überprüfe deine Verbindung.'
+      return false
     } finally {
       authLoading.value = false
     }
   }
 
   /**
-   * Log out.
-   * TODO: Also call: await fetch('/api/auth/logout', { method: 'POST' })
+   * Log out — clears session from Supabase and localStorage.
    */
-  function logout() {
-    setCurrentUser(null)
+  async function logout() {
+    await supabase.auth.signOut()
+    // onAuthStateChange above will set currentUser to null automatically
   }
 
   /**
-   * Update display name.
-   * TODO: Replace with: await fetch('/api/auth/me', { method: 'PATCH', body: JSON.stringify({name}) })
+   * Update the user's display name.
    */
   async function updateProfile({ name }) {
     authLoading.value = true
-    authError.value = null
-
-    await new Promise(r => setTimeout(r, 400))
+    authError.value   = null
 
     try {
-      const users = getUsers()
-      const idx = users.findIndex(u => u.id === currentUser.value.id)
-      if (idx === -1) return false
+      const { data, error } = await supabase.auth.updateUser({
+        data: { name: name.trim() }
+      })
 
-      users[idx].name = name.trim()
-      users[idx].avatar = name.trim().charAt(0).toUpperCase()
-      saveUsers(users)
+      if (error) {
+        authError.value = parseSupabaseError(error)
+        return false
+      }
 
-      const { passwordHash, ...safeUser } = users[idx]
-      setCurrentUser(safeUser)
+      currentUser.value = buildUserObject(data.user)
       return true
+    } catch {
+      authError.value = 'Netzwerkfehler. Bitte überprüfe deine Verbindung.'
+      return false
     } finally {
       authLoading.value = false
     }
   }
 
-  function clearError() {
-    authError.value = null
+  /**
+   * Resend the verification email.
+   */
+  async function resendVerification(email) {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/verify-email` }
+      })
+      if (error) {
+        authError.value = parseSupabaseError(error)
+        return false
+      }
+      return true
+    } catch {
+      return false
+    }
   }
+
+  function clearError() { authError.value = null }
 
   return {
     currentUser,
     isLoggedIn,
     authLoading,
     authError,
+    initAuth,
     register,
     login,
     logout,
     updateProfile,
+    resendVerification,
     clearError
   }
 }
+
+// Export supabase client so api.js can use it for data queries
+export { supabase }

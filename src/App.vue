@@ -6,12 +6,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import EmergencyModal from './components/EmergencyModal.vue'
+import { useAuth } from './composables/useAuth.js'
 
 const emergencyModal = ref(null)
+const { initAuth } = useAuth()
 
 function openEmergency() {
   emergencyModal.value?.open()
 }
+
+// Restore session on every page load/refresh
+onMounted(() => {
+  initAuth()
+})
 </script>

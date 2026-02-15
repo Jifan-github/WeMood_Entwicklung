@@ -236,8 +236,15 @@ async function handleRegister() {
   clearError()
   if (!validate()) return
 
-  const success = await register({ name: name.value, email: email.value, password: password.value })
-  if (success) router.push('/')
+  const result = await register({ name: name.value, email: email.value, password: password.value })
+
+  if (result === 'verify') {
+    // Email confirmation required — show the "check your inbox" screen
+    router.push({ path: '/verify-email', query: { email: email.value } })
+  } else if (result === true) {
+    // Email confirmation disabled in Supabase — logged in immediately
+    router.push('/')
+  }
 }
 </script>
 
