@@ -2,7 +2,7 @@
   <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
     <div class="w-full max-w-4xl">
 
-      <!-- Zurück Button -->
+      <!-- Zurück -->
       <router-link
           to="/"
           class="mb-6 sm:mb-8 inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition-colors"
@@ -15,7 +15,7 @@
       <div v-if="loading" class="bg-white border border-gray-200 rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-12">
         <div class="flex flex-col items-center gap-3 py-8">
           <LoaderIcon class="w-8 h-8 text-gray-400 animate-spin" />
-          <p class="text-gray-400 text-sm">Analyse wird durchgeführt…</p>
+          <p class="text-gray-400 text-sm">KI analysiert deine Anfrage…</p>
         </div>
       </div>
 
@@ -31,68 +31,127 @@
         </button>
       </div>
 
-      <!-- Results -->
-      <div v-else class="bg-white border border-gray-200 rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-12">
+      <template v-else>
 
-        <div class="mb-8 sm:mb-10 text-center">
-          <h2 class="text-2xl sm:text-3xl mb-4 sm:mb-6 font-quicksand font-semibold text-gray-800">
-            Deine Analyse
-          </h2>
-          <p class="text-base sm:text-xl text-gray-600 leading-relaxed">
-            Basierend auf deiner Suche nach
-            <span class="font-semibold text-gray-800">„{{ searchQueryText }}"</span>
-            haben wir folgende Themen erkannt:
-          </p>
-        </div>
+        <!-- ── Emergency resources ───────────────────────────────────
+             Shown automatically when Mario's Mistral AI detects
+             crisis intent (suicide, self-harm, acute distress).
+             Resources are Austrian hotlines returned by the backend.
+        ──────────────────────────────────────────────────────────── -->
+        <Transition name="banner-slide">
+          <div v-if="emergencyResources" class="mb-4">
+            <div class="bg-red-50 border border-red-200 rounded-2xl p-5 sm:p-6">
 
-        <!-- No results -->
-        <div v-if="searchResults.length === 0" class="text-center py-8">
-          <p class="text-gray-400 mb-2">Keine Artikel gefunden.</p>
-          <p class="text-sm text-gray-400">Versuche einen anderen Suchbegriff.</p>
-        </div>
+              <!-- Pulsing dot + message -->
+              <div class="flex items-start gap-3 mb-4">
+                <span class="relative flex h-3 w-3 mt-1 shrink-0">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                </span>
+                <p class="font-semibold text-red-700 text-sm sm:text-base leading-snug">
+                  {{ emergencyResources.message }}
+                </p>
+              </div>
 
-        <!-- Result cards -->
-        <div v-else class="space-y-4 sm:space-y-6">
-          <h3 class="text-lg sm:text-xl text-gray-700 mb-3 sm:mb-4">Relevante Themen für dich:</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <!-- Hotlines -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+                <a
+                  v-for="h in emergencyResources.hotlines"
+                  :key="h.number"
+                  :href="'tel:' + h.number.replace(/\s/g, '')"
+                  class="flex items-center gap-3 bg-white border border-red-100 rounded-xl p-3 hover:border-red-300 transition-colors"
+                >
+                  <div class="w-9 h-9 bg-red-500 rounded-lg flex items-center justify-center shrink-0">
+                    <PhoneIcon class="w-4 h-4 text-white" />
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-gray-800 leading-tight">{{ h.number }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ h.name }}</p>
+                    <p class="text-xs text-gray-400 truncate">{{ h.description }}</p>
+                  </div>
+                </a>
+              </div>
+
+              <!-- Online help links -->
+              <div class="flex flex-wrap gap-2">
+                <a
+                  v-for="o in emergencyResources.online_help"
+                  :key="o.url"
+                  :href="o.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-xs px-3 py-1.5 bg-white border border-red-100 rounded-full text-red-600 hover:border-red-300 transition-colors"
+                >
+                  {{ o.name }} →
+                </a>
+              </div>
+            </div>
+          </div>
+        </Transition>
+
+        <!-- Results panel -->
+        <div class="bg-white border border-gray-200 rounded-2xl sm:rounded-3xl shadow-sm p-6 sm:p-12">
+
+          <div class="mb-8 sm:mb-10 text-center">
+            <h2 class="text-2xl sm:text-3xl mb-4 sm:mb-6 font-quicksand font-semibold text-gray-800">
+              Deine Analyse
+            </h2>
+            <p class="text-base sm:text-xl text-gray-600 leading-relaxed">
+              Basierend auf deiner Suche nach
+              <span class="font-semibold text-gray-800">„{{ searchQueryText }}"</span>
+              haben wir folgende Themen erkannt:
+            </p>
+          </div>
+
+          <!-- No results -->
+          <div v-if="searchResults.length === 0" class="text-center py-8">
+            <p class="text-gray-400 mb-2">Keine Artikel gefunden.</p>
+            <p class="text-sm text-gray-400">Versuche einen anderen Suchbegriff.</p>
+          </div>
+
+          <!-- Result cards -->
+          <div v-else class="space-y-4 sm:space-y-6">
+            <h3 class="text-lg sm:text-xl text-gray-700 mb-3 sm:mb-4">Relevante Themen für dich:</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <router-link
+                  v-for="result in searchResults"
+                  :key="result.id"
+                  :to="'/article/' + result.id"
+                  class="group bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-gray-100 transition-all text-left"
+              >
+                <div class="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                  <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-200 flex items-center justify-center text-2xl sm:text-3xl shrink-0">
+                    {{ result.emoji }}
+                  </div>
+                  <div>
+                    <h4 class="text-xl sm:text-2xl font-quicksand font-semibold text-gray-800">
+                      {{ result.title }}
+                    </h4>
+                    <span v-if="result.confidence" class="text-xs sm:text-sm text-gray-400">
+                      {{ result.confidence }}% Übereinstimmung
+                    </span>
+                  </div>
+                </div>
+                <p class="text-sm sm:text-base text-gray-600 leading-relaxed line-clamp-3">
+                  {{ result.description }}
+                </p>
+                <div class="mt-3 sm:mt-4 text-gray-500 group-hover:translate-x-2 transition-transform text-sm">
+                  Mehr erfahren →
+                </div>
+              </router-link>
+            </div>
+          </div>
+
+          <div class="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-gray-200">
             <router-link
-                v-for="result in searchResults"
-                :key="result.id"
-                :to="'/article/' + result.id"
-                class="group bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-gray-100 transition-all text-left"
+                to="/library"
+                class="block w-full py-3 sm:py-4 bg-gray-100 border border-gray-200 rounded-full hover:bg-gray-200 transition-colors text-gray-700 text-base sm:text-lg text-center"
             >
-              <div class="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-                <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-200 flex items-center justify-center text-2xl sm:text-3xl">
-                  {{ result.emoji }}
-                </div>
-                <div>
-                  <h4 class="text-xl sm:text-2xl font-quicksand font-semibold text-gray-800">
-                    {{ result.title }}
-                  </h4>
-                  <span v-if="result.confidence" class="text-xs sm:text-sm text-gray-400">
-                    {{ result.confidence }}% Übereinstimmung
-                  </span>
-                </div>
-              </div>
-              <p class="text-sm sm:text-base text-gray-600 leading-relaxed">
-                {{ result.description }}
-              </p>
-              <div class="mt-3 sm:mt-4 text-gray-500 group-hover:translate-x-2 transition-transform text-sm">
-                Mehr erfahren →
-              </div>
+              Zur Bibliothek für weitere Ressourcen
             </router-link>
           </div>
         </div>
-
-        <div class="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-gray-200">
-          <router-link
-              to="/library"
-              class="block w-full py-3 sm:py-4 bg-gray-100 border border-gray-200 rounded-full hover:bg-gray-200 transition-colors text-gray-700 text-base sm:text-lg text-center"
-          >
-            Zur Bibliothek für weitere Ressourcen
-          </router-link>
-        </div>
-      </div>
+      </template>
     </div>
   </div>
 </template>
@@ -103,22 +162,25 @@ import { useRoute } from 'vue-router'
 import {
   ArrowLeft as ArrowLeftIcon,
   Loader as LoaderIcon,
-  AlertCircle as AlertCircleIcon
+  AlertCircle as AlertCircleIcon,
+  Phone as PhoneIcon
 } from 'lucide-vue-next'
 import { searchArticles } from '../services/api.js'
 
-const route           = useRoute()
-const searchResults   = ref([])
-const loading         = ref(true)
-const error           = ref(null)
-const searchQueryText = ref('')
+const route              = useRoute()
+const searchResults      = ref([])
+const loading            = ref(true)
+const error              = ref(null)
+const searchQueryText    = ref('')
+const emergencyResources = ref(null)
 
 async function doSearch() {
-  loading.value = true
-  error.value   = null
+  loading.value            = true
+  error.value              = null
+  emergencyResources.value = null
   try {
-    const emotions = route.query.emotions ? route.query.emotions.split(',').filter(Boolean) : []
-    searchResults.value = await searchArticles(searchQueryText.value, emotions)
+    searchResults.value      = await searchArticles(searchQueryText.value)
+    emergencyResources.value = searchArticles.getEmergencyResources()
   } catch (e) {
     error.value = e.message
   } finally {
@@ -131,3 +193,11 @@ onMounted(() => {
   doSearch()
 })
 </script>
+
+<style scoped>
+.banner-slide-enter-active { animation: bannerIn 0.4s cubic-bezier(0.34, 1.1, 0.64, 1); }
+.banner-slide-leave-active { animation: bannerOut 0.2s ease-in forwards; }
+@keyframes bannerIn  { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bannerOut { from { opacity: 1; } to { opacity: 0; } }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+</style>

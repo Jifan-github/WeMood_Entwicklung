@@ -1,101 +1,192 @@
 /**
- * WeMood API Service — Supabase
+ * WeMood API Service
  *
- * Column name note: Supabase returns snake_case (read_time, article_id).
- * This file maps everything to camelCase so the views don't need to change.
+ * ┌─────────────────────────────────────────────────────────────┐
+ * │  Articles & Search  →  Mario's FastAPI backend              │
+ * │                        Python / PostgreSQL / Mistral AI     │
+ * │                        GET /api/v1/articles/:id             │
+ * │                        GET /api/v1/articles/                │
+ * │                        GET /api/v1/search?q=...             │
+ * │                                                             │
+ * │  Auth, Bookmarks,   →  Supabase                            │
+ * │  Mood logs              (user-specific data)                │
+ * └─────────────────────────────────────────────────────────────┘
+ *
+ * In development the Vite proxy forwards /api/v1/* to Mario's local
+ * server on port 8000 (see vite.config.js).
+ * In production set VITE_BACKEND_URL=https://your-server.com in .env
  */
 
 import { supabase } from '../lib/supabase.js'
 
-// ── Error helper ──────────────────────────────────────────────────────
+// ── Backend base URL ──────────────────────────────────────────────────
+const BACKEND = (import.meta.env.VITE_BACKEND_URL || '') + '/api/v1'
+
+// ── Fetch wrapper for Mario's FastAPI ─────────────────────────────────
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${BACKEND}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.detail || body.message || `Fehler ${res.status}`)
+  }
+  if (res.status === 204) return null
+  return res.json()
+}
+
+// ── Supabase error helper ─────────────────────────────────────────────
 function throwIfError(error) {
   if (error) throw new Error(error.message || 'Datenbankfehler')
 }
 
-// Map a raw DB article row → camelCase shape the views expect
-function mapArticle(row) {
-  if (!row) return null
-  return {
-    id:          row.id,
-    title:       row.title,
-    description: row.description,
-    emoji:       row.emoji,
-    readTime:    row.read_time,
-    confidence:  row.confidence ?? 0,
-    emotions:    row.emotions ?? [],
-    overview:    row.overview,
-    facts:       row.facts ?? [],
-    literature:  row.literature ?? [],
-    videos:      row.videos ?? [],
-    conclusion:  row.conclusion,
-    takeaways:   row.takeaways ?? []
-  }
-}
-
-// ── Articles ──────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────
+// SEARCH  →  Mario's FastAPI + Mistral AI
+// ─────────────────────────────────────────────────────────────────────
 
 /**
- * Search articles by keyword + optional emotion filters.
- * Uses a simple ilike search — works without any special Supabase setup.
+ * GET /api/v1/search?q=<query>
+ *
+ * The backend:
+ *   1. Sends the query to Mistral AI — extracts semantic tags, detects intent
+ *   2. Detects emergency automatically (suicidal ideation, self-harm, crisis)
+ *   3. Runs hybrid full-text + overlap-coefficient tag search in PostgreSQL
+ *   4. Returns ranked articles + optional emergency_resources with hotlines
+ *
+ * Maps backend shape → shape SearchResultView expects:
+ *   { id, title, description, emoji, confidence }
  */
-export async function searchArticles(query, emotions = []) {
-  const term = query?.trim() || ''
+export async function searchArticles(query, _emotions = []) {
+  if (!query?.trim()) return []
 
-  let q = supabase
-    .from('articles')
-    .select('id, title, description, emoji, read_time, confidence, emotions')
+  const data = await apiFetch(`/search?q=${encodeURIComponent(query.trim())}`)
 
-  // Simple keyword search across title + description
-  if (term) {
-    q = q.or(`title.ilike.%${term}%,description.ilike.%${term}%,overview.ilike.%${term}%`)
-  }
+  // Stash emergency resources so SearchResultView can pick them up after the call
+  searchArticles._emergency = data.emergency_resources || null
 
-  if (emotions.length) {
-    q = q.overlaps('emotions', emotions)
-  }
-
-  const { data, error } = await q.limit(20)
-  throwIfError(error)
-  return (data || []).map(mapArticle)
+  return (data.results || []).map(r => ({
+    id:          r.id,
+    title:       r.title,
+    description: r.summary,
+    emoji:       categoryToEmoji(r.category),
+    confidence:  Math.round((r.relevance_score || 0) * 100),
+    tags:        r.tags || [],
+    sentiment:   r.sentiment,
+    category:    r.category
+  }))
 }
 
+searchArticles.getEmergencyResources = () => searchArticles._emergency || null
+
+// ─────────────────────────────────────────────────────────────────────
+// ARTICLES  →  Mario's FastAPI
+// ─────────────────────────────────────────────────────────────────────
+
 /**
- * Get a single article by ID — full content.
+ * GET /api/v1/articles/:id
+ *
+ * Backend returns:
+ *   { id, title, content, source, url, publication_date,
+ *     ai_analysis: { tags, scientific_disciplines, summary,
+ *                    sentiment, category, confidence_score } }
+ *
+ * Maps → shape ArticleDetailView expects:
+ *   { id, title, emoji, readTime, overview, facts,
+ *     literature, videos, conclusion, takeaways }
  */
 export async function getArticleById(id) {
-  const { data, error } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  throwIfError(error)
-  return mapArticle(data)
+  const r = await apiFetch(`/articles/${id}`)
+  return mapFullArticle(r)
 }
 
 /**
- * Get all articles for the library.
+ * GET /api/v1/articles/?skip=0&limit=20
+ *
+ * Backend returns: { articles: [...], total, skip, limit }
+ * Maps → shape LibraryView expects: { id, title, description, emoji, readTime }
  */
-export async function getAllArticles({ page = 1, limit = 20, emotion = null } = {}) {
-  const from = (page - 1) * limit
-  const to   = from + limit - 1
-
-  let q = supabase
-    .from('articles')
-    .select('id, title, description, emoji, read_time, emotions')
-    .order('id')
-    .range(from, to)
-
-  if (emotion) {
-    q = q.overlaps('emotions', [emotion])
-  }
-
-  const { data, error } = await q
-  throwIfError(error)
-  return (data || []).map(mapArticle)
+export async function getAllArticles({ page = 1, limit = 20 } = {}) {
+  const skip = (page - 1) * limit
+  const data = await apiFetch(`/articles/?skip=${skip}&limit=${limit}`)
+  return (data.articles || []).map(mapListArticle)
 }
 
-// ── Bookmarks ─────────────────────────────────────────────────────────
+// ── Mappers ───────────────────────────────────────────────────────────
+
+function mapListArticle(r) {
+  const a = r.ai_analysis || {}
+  return {
+    id:          r.id,
+    title:       r.title,
+    description: a.summary || r.content?.slice(0, 120) + '…' || '',
+    emoji:       categoryToEmoji(a.category),
+    readTime:    estimateReadTime(r.content)
+  }
+}
+
+function mapFullArticle(r) {
+  if (!r) return null
+  const a = r.ai_analysis || {}
+
+  const paragraphs = (r.content || '').split(/\n{2,}/).map(p => p.trim()).filter(Boolean)
+  const overview   = paragraphs.slice(0, 2).join('\n\n') || a.summary || ''
+  const conclusion = paragraphs.at(-1) || a.summary || ''
+
+  // Scientific disciplines → numbered facts
+  const facts = (a.scientific_disciplines || []).map(d => `Wissenschaftliche Disziplin: ${d}`)
+
+  // Top AI tags → key takeaways
+  const takeaways = (a.tags || []).slice(0, 8)
+
+  // Source → literature entry
+  const literature = r.source ? [{ title: r.source, author: 'Quelle', description: r.url || '' }] : []
+
+  return {
+    id:         r.id,
+    title:      r.title,
+    emoji:      categoryToEmoji(a.category),
+    readTime:   estimateReadTime(r.content),
+    overview,
+    facts,
+    literature,
+    videos:     [],
+    conclusion,
+    takeaways,
+    source:     r.source,
+    url:        r.url,
+    tags:       a.tags || [],
+    sentiment:  a.sentiment,
+    category:   a.category,
+    summary:    a.summary
+  }
+}
+
+function estimateReadTime(content) {
+  if (!content) return '5 Min. Lesezeit'
+  const mins = Math.max(1, Math.round(content.split(/\s+/).length / 200))
+  return `${mins} Min. Lesezeit`
+}
+
+function categoryToEmoji(category) {
+  if (!category) return '📄'
+  const c = category.toLowerCase()
+  if (c.includes('studie') || c.includes('study'))         return '🔬'
+  if (c.includes('review') || c.includes('meta'))          return '📚'
+  if (c.includes('angst') || c.includes('anxiety'))        return '😰'
+  if (c.includes('depress'))                               return '😔'
+  if (c.includes('stress'))                                return '😤'
+  if (c.includes('achtsamkeit') || c.includes('mindful'))  return '🧘‍♀️'
+  if (c.includes('schlaf') || c.includes('sleep'))         return '🌙'
+  if (c.includes('trauma'))                                return '💙'
+  if (c.includes('selbst') || c.includes('self'))          return '✨'
+  if (c.includes('resilienz') || c.includes('resilience')) return '🌺'
+  return '📄'
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// BOOKMARKS  →  Supabase
+// ─────────────────────────────────────────────────────────────────────
 
 export async function bookmarkArticle(articleId) {
   const { data, error } = await supabase
@@ -103,58 +194,41 @@ export async function bookmarkArticle(articleId) {
     .insert({ article_id: articleId })
     .select()
     .single()
-
   if (error && error.code !== '23505') throwIfError(error)
   return data
 }
 
 export async function removeBookmark(articleId) {
-  const { error } = await supabase
-    .from('bookmarks')
-    .delete()
-    .eq('article_id', articleId)
-
+  const { error } = await supabase.from('bookmarks').delete().eq('article_id', articleId)
   throwIfError(error)
 }
 
 export async function getBookmarks() {
   const { data, error } = await supabase
     .from('bookmarks')
-    .select('id, article_id, created_at, articles(id, title, emoji, read_time, description)')
+    .select('id, article_id, created_at')
     .order('created_at', { ascending: false })
-
   throwIfError(error)
-  return (data || []).map(b => ({
-    bookmarkId: b.id,
-    articleId:  b.article_id,
-    createdAt:  b.created_at,
-    ...mapArticle(b.articles)
-  }))
+  return data || []
 }
 
-// ── Mood logs ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────
+// MOOD LOGS  →  Supabase
+// ─────────────────────────────────────────────────────────────────────
 
 export async function logMood({ emotion, note = null }) {
   const { data, error } = await supabase
-    .from('mood_logs')
-    .insert({ emotion, note })
-    .select()
-    .single()
-
+    .from('mood_logs').insert({ emotion, note }).select().single()
   throwIfError(error)
   return data
 }
 
 export async function getMoodHistory({ from = null, to = null, limit = 50 } = {}) {
   let q = supabase
-    .from('mood_logs')
-    .select('id, emotion, note, created_at')
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
+    .from('mood_logs').select('id, emotion, note, created_at')
+    .order('created_at', { ascending: false }).limit(limit)
   if (from) q = q.gte('created_at', from)
   if (to)   q = q.lte('created_at', to)
-
   const { data, error } = await q
   throwIfError(error)
   return data || []
