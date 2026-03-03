@@ -5,8 +5,7 @@
  * │  Articles & Search  →  Mario's FastAPI backend              │
  * │                        Python / PostgreSQL / Mistral AI     │
  * │                        GET /api/v1/articles/:id             │
- * │                        GET /api/v1/articles/                │
- * │                        GET /api/v1/search?q=...             │
+ * │                        GET /api/v1/search/?q=...            │
  * │                                                             │
  * │  Auth, Bookmarks,   →  Supabase                            │
  * │  Mood logs              (user-specific data)                │
@@ -60,7 +59,7 @@ function throwIfError(error) {
 export async function searchArticles(query, _emotions = []) {
   if (!query?.trim()) return []
 
-  const data = await apiFetch(`/search?q=${encodeURIComponent(query.trim())}`)
+  const data = await apiFetch(`/search/?q=${encodeURIComponent(query.trim())}`)
 
   // Stash emergency resources so SearchResultView can pick them up after the call
   searchArticles._emergency = data.emergency_resources || null
@@ -101,15 +100,23 @@ export async function getArticleById(id) {
 }
 
 /**
- * GET /api/v1/articles/?skip=0&limit=20
+ * Load articles for the library.
  *
- * Backend returns: { articles: [...], total, skip, limit }
+ * GET /api/v1/articles/ requires a FastAPI JWT token (admin only).
+ * Since end-users authenticate via Supabase (separate system),
+ * we use the public /search/ endpoint with a broad query instead.
+ *
  * Maps → shape LibraryView expects: { id, title, description, emoji, readTime }
  */
-export async function getAllArticles({ page = 1, limit = 20 } = {}) {
-  const skip = (page - 1) * limit
-  const data = await apiFetch(`/articles/?skip=${skip}&limit=${limit}`)
-  return (data.articles || []).map(mapListArticle)
+export async function getAllArticles() {
+  const data = await apiFetch(`/search/?q=psychologie`)
+  return (data.results || []).map(r => ({
+    id:          r.id,
+    title:       r.title,
+    description: r.summary || '',
+    emoji:       categoryToEmoji(r.category),
+    readTime:    estimateReadTime(null)
+  }))
 }
 
 // ── Mappers ───────────────────────────────────────────────────────────
